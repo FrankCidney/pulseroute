@@ -1,0 +1,62 @@
+{
+  "datasetMetadata": {
+    "version": "2026.1",
+    "sources": [
+      {
+        "id": "OSD-574",
+        "title": "SpaceX Inspiration4 Civilian Crew Multi-Omics, Physiological & Dermatological Dataset",
+        "repository": "NASA Open Science Data Repository (OSDR / GeneLab)",
+        "url": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-574",
+        "parametersDerived": [
+          "Heart Rate Variability (RMSSD) microgravity autonomic adaptation curves",
+          "Epithelial barrier cytokine & skin microbiome inflammatory shifts",
+          "High-apogee orbital flight resting heart rate and SpO2 stability envelopes"
+        ]
+      },
+      {
+        "id": "OSD-379",
+        "title": "Spaceflight Mammalian Radiation Dosimetry, Oxidative Stress & DNA Damage Models",
+        "repository": "NASA Open Science Data Repository (OSDR)",
+        "url": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-379",
+        "parametersDerived": [
+          "Ionizing radiation DNA double-strand break (DSB) linear-quadratic coefficients",
+          "Reactive Oxygen Species (ROS) lipid peroxidation thresholds",
+          "Prophylactic radioprotectant (Amifostine / NAC / Antioxidant Alpha) efficacy curves"
+        ]
+      },
+      {
+        "id": "ExMC-ICL-1.0",
+        "title": "NASA Exploration Medical Capabilities (ExMC) IMPACT 1.0 Medical Condition List",
+        "repository": "NASA Human Research Program (HRP) / Johnson Space Center",
+        "url": "https://humanresearchroadmap.nasa.gov/",
+        "parametersDerived": [
+          "Acute Hypercapnia (> 0.5% pCO2 + tachypnea) diagnostic ruleset",
+          "Acute Hypoxia (SpO2 < 90% + cabin depressurization < 12.0 psi) emergency checklist",
+          "Solar Particle Event (SPE > 5.0 mSv/h) storm shelter & ALARA career limits (600 mSv)",
+          "Spaceflight-Associated Neuro-ocular Syndrome (SANS) ONSD (> 5.8 mm) & LBNP protocols"
+        ]
+      }
+    ]
+  },
+  "nominalBiometricRanges": {
+    "heartRateBpm": { "min": 55, "max": 95, "microgravityMean": 69 },
+    "spO2Pct": { "min": 95.0, "max": 100.0, "hypoxiaCutoff": 90.0 },
+    "hrvRmssdMs": { "min": 30, "max": 95, "fatigueCutoff": 24 },
+    "respirationRateBrPm": { "min": 12, "max": 20, "hypercapniaCutoff": 22 },
+    "coreTempCelsius": { "min": 36.3, "max": 37.5 },
+    "venousEngorgementPct": { "nominalZeroG": 13, "sansWarning": 20, "sansCritical": 24 },
+    "intraocularPressureMmHg": { "nominalZeroG": 15.2, "sansWarning": 18.5, "sansCritical": 21.0 },
+    "opticNerveSheathMm": { "nominalZeroG": 5.3, "sansWarning": 5.8, "sansCritical": 6.2 }
+  },
+  "nominalEclssEnvironment": {
+    "cabinPressurePsi": 14.7,
+    "cabinCo2Pct": 0.14,
+    "cabinCo2MmHg": 1.06,
+    "cabinO2Pct": 21.0,
+    "ambientTempCelsius": 21.2,
+    "relativeHumidityPct": 44,
+    "radiationDoseRateMsvHr": 0.04,
+    "solarProtonFluxPfu": 1.2,
+    "careerAlaraLimitMsv": 600
+  }
+}
