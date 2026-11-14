@@ -1,0 +1,262 @@
+[
+  {
+    "conditionId": "NOMINAL_STATE",
+    "iclCode": "ExMC-00 / ICL-NOMINAL",
+    "title": "All Physiological & Habitat Systems Nominal",
+    "earthClinicTitle": "Patient Vitals & Ambient Ward Environment Stable",
+    "defaultSeverityGrade": "NOMINAL",
+    "crewStatus": "NOMINAL",
+    "timeToImpairmentText": "N/A — Continuous Autonomous Surveillance",
+    "diagnosticCriteriaSummary": "SpO2 >= 95%, HR 55-95 BPM, Cabin CO2 < 0.35%, Cabin Pressure 14.2-14.9 psi, Radiation < 0.15 mSv/h.",
+    "flightSurgeonDirective": "Telemetry nominal across Astroskin biometrics and ECLSS cabin sensors. Continue scheduled countermeasure exercise and fluid intake.",
+    "earthClinicDirective": "Patient telemetry within normal clinical baseline. Continue routine hourly automated observation.",
+    "checklistSteps": [
+      {
+        "id": "nom-1",
+        "stepNumber": 1,
+        "instruction": "Verify Astroskin thoracic band contact and Bluetooth LAN telemetry integrity.",
+        "earthClinicInstruction": "Verify bedside pulse oximeter and 3-lead chest electrode adhesion.",
+        "targetSubsystem": "ASTROSKIN BIOMETRICS",
+        "critical": false
+      },
+      {
+        "id": "nom-2",
+        "stepNumber": 2,
+        "instruction": "Complete daily 45-minute ARED resistive and cycle ergometer countermeasure session.",
+        "earthClinicInstruction": "Maintain routine patient hydration and scheduled mobilization checks.",
+        "targetSubsystem": "COUNTERMEASURES",
+        "critical": false
+      },
+      {
+        "id": "nom-3",
+        "stepNumber": 3,
+        "instruction": "Queue routine 6-hour medical summary packet for next Deep Space Network (DSN) window.",
+        "earthClinicInstruction": "Archive patient vitals snapshot to local offline clinic database.",
+        "targetSubsystem": "OFFLINE DB / DSN",
+        "critical": false
+      }
+    ]
+  },
+  {
+    "conditionId": "EXMC_01_HYPERCAPNIA",
+    "iclCode": "ExMC-01 / ICL-HYPERCAPNIA-4.1",
+    "title": "Acute Hypercapnia (Carbon Dioxide Toxicity)",
+    "earthClinicTitle": "Acute Hypercapnic Respiratory Acidosis / Poor Ventilation",
+    "defaultSeverityGrade": "GRADE_3",
+    "crewStatus": "CRITICAL",
+    "timeToImpairmentText": "< 14 minutes to severe cognitive stupor",
+    "diagnosticCriteriaSummary": "Cabin pCO2 > 0.50% (> 3.8 mmHg) AND Respiration > 22 BrPM AND HRV RMSSD suppression.",
+    "flightSurgeonDirective": "WARNING: Cabin CO2 scrubber breakthrough detected with secondary crew tachypnea. Equip supplemental O2 mask immediately and replace LiOH/Amine canister in Module B.",
+    "earthClinicDirective": "WARNING: Elevated CO2 retention and tachypnea detected. Initiate non-rebreather oxygen support, verify airway patency, and increase room ventilation immediately.",
+    "checklistSteps": [
+      {
+        "id": "hypcap-1",
+        "stepNumber": 1,
+        "instruction": "Don portable 100% O2 mask from Locker Bay 2 to flush alveolar CO2 micro-pockets.",
+        "earthClinicInstruction": "Apply high-flow supplemental oxygen mask and elevate head of bed to 45 degrees.",
+        "targetSubsystem": "EMERGENCY O2",
+        "critical": true
+      },
+      {
+        "id": "hypcap-2",
+        "stepNumber": 2,
+        "instruction": "Actuate ECLSS Inter-Module Ventilation (IMV) high-flow fan to disperse local CO2 pocket.",
+        "earthClinicInstruction": "Open ward ventilation dampers and verify negative/positive pressure air exchange.",
+        "targetSubsystem": "ECLSS AIRFLOW",
+        "critical": true
+      },
+      {
+        "id": "hypcap-3",
+        "stepNumber": 3,
+        "instruction": "Swap secondary Lithium Hydroxide (LiOH) scrubber cartridge in CDRA Rack B-02.",
+        "earthClinicInstruction": "Check breathing circuit CO2 absorber canister and arterial/venous blood gas trend.",
+        "targetSubsystem": "ECLSS CDRA SCRUBBER",
+        "critical": true
+      },
+      {
+        "id": "hypcap-4",
+        "stepNumber": 4,
+        "instruction": "Re-evaluate crew cognitive latency (PVT) and headache severity after 10 minutes on O2.",
+        "earthClinicInstruction": "Re-assess Glasgow Coma Scale (GCS) and respiratory rate after 10 minutes.",
+        "targetSubsystem": "CLINICAL RE-EVAL",
+        "critical": false
+      }
+    ]
+  },
+  {
+    "conditionId": "EXMC_02_HYPOXIA",
+    "iclCode": "ExMC-02 / ICL-HYPOXIA-1.2",
+    "title": "Acute Hypoxia & Cabin Atmospheric Decompression",
+    "earthClinicTitle": "Acute Hypoxemic Respiratory Crisis / Desaturation",
+    "defaultSeverityGrade": "GRADE_3",
+    "crewStatus": "CRITICAL",
+    "timeToImpairmentText": "< 6 minutes to Time of Useful Consciousness (TUC)",
+    "diagnosticCriteriaSummary": "Astronaut SpO2 < 90% AND Heart Rate > 105 BPM AND Cabin Pressure < 12.0 psi.",
+    "flightSurgeonDirective": "EMERGENCY: Rapid cabin depressurization and arterial desaturation (SpO2 < 90%). Put on your Quick-Don pressure mask IMMEDIATELY before attempting hull/valve isolation.",
+    "earthClinicDirective": "EMERGENCY: Critical arterial desaturation (SpO2 < 90%) with compensatory tachycardia. Administer 15 L/min O2 via reservoir mask and prepare emergency airway kit.",
+    "checklistSteps": [
+      {
+        "id": "hypox-1",
+        "stepNumber": 1,
+        "instruction": "Don emergency Quick-Don positive-pressure oxygen mask from Bay 3 (pull red lanyard).",
+        "earthClinicInstruction": "Apply 15 L/min non-rebreather oxygen mask and verify chest rise bilaterally.",
+        "targetSubsystem": "PERSONAL LIFE SUPPORT",
+        "critical": true
+      },
+      {
+        "id": "hypox-2",
+        "stepNumber": 2,
+        "instruction": "Verify mask seal integrity and confirm regulator flow indicator shows continuous GREEN.",
+        "earthClinicInstruction": "Check pulse oximeter perfusion index and verify O2 cylinder regulator pressure.",
+        "targetSubsystem": "O2 REGULATOR",
+        "critical": true
+      },
+      {
+        "id": "hypox-3",
+        "stepNumber": 3,
+        "instruction": "Evacuate affected compartment to Core Habitat Airlock Shelter and seal Hatch H-02.",
+        "earthClinicInstruction": "Position patient upright, clear airway secretions, and prepare bag-valve-mask (BVM).",
+        "targetSubsystem": "HULL ISOLATION",
+        "critical": true
+      },
+      {
+        "id": "hypox-4",
+        "stepNumber": 4,
+        "instruction": "Actuate Manual N2/O2 High-Pressure Equalization Valve V-04 to restore 14.7 psi.",
+        "earthClinicInstruction": "Record emergency incident snapshot to local database for medical evacuation handoff.",
+        "targetSubsystem": "ECLSS PRESSURE",
+        "critical": false
+      }
+    ]
+  },
+  {
+    "conditionId": "EXMC_03_SPE_RADIATION",
+    "iclCode": "ExMC_03 / ICL-RAD-SPE-2.4",
+    "title": "Solar Particle Event (SPE) Acute Radiation Exposure",
+    "earthClinicTitle": "Acute Ionizing Radiation / Hazmat Exposure Alert",
+    "defaultSeverityGrade": "GRADE_3",
+    "crewStatus": "CRITICAL",
+    "timeToImpairmentText": "< 15 minutes to exceed ALARA acute prodromal threshold",
+    "diagnosticCriteriaSummary": "Personal dosimeter rate > 5.0 mSv/hr OR habitat exterior proton flux > 100 MeV alert.",
+    "flightSurgeonDirective": "RADIATION ALARM: Solar Particle Event proton flux spike (> 5.0 mSv/hr). Abort all outer-hull activities, retreat to the water-shielded Storm Shelter, and administer Amifostine prophylaxis.",
+    "earthClinicDirective": "RADIATION / HAZMAT ALARM: Elevated ambient dosimetry rate. Relocate personnel to shielded interior zone and initiate prophylactic radioprotectant protocol.",
+    "checklistSteps": [
+      {
+        "id": "rad-1",
+        "stepNumber": 1,
+        "instruction": "Retreat immediately to Central Water-Wall Storm Shelter (Aft Galley Polyethylene Bay).",
+        "earthClinicInstruction": "Evacuate patient and staff to shielded interior bunker or negative-pressure clean zone.",
+        "targetSubsystem": "STORM SHELTER",
+        "critical": true
+      },
+      {
+        "id": "rad-2",
+        "stepNumber": 2,
+        "instruction": "Administer 500mg Amifostine (WR-2721) cytoprotective radioprotectant from Med-Kit Locker 2.",
+        "earthClinicInstruction": "Administer prescribed radioprotectant / potassium iodide or chelating countermeasure.",
+        "targetSubsystem": "PHARMACOLOGY",
+        "critical": true
+      },
+      {
+        "id": "rad-3",
+        "stepNumber": 3,
+        "instruction": "Consume +250ml High-Antioxidant Formulation Alpha (N-acetylcysteine + Vitamins C/E).",
+        "earthClinicInstruction": "Administer oral antiemetic (Ondansetron 8mg) and antioxidant hydration pack.",
+        "targetSubsystem": "MOLECULAR COUNTERMEASURE",
+        "critical": true
+      },
+      {
+        "id": "rad-4",
+        "stepNumber": 4,
+        "instruction": "Log personal active dosimeter cumulative mSv readout for OSD-379 genomic risk tracking.",
+        "earthClinicInstruction": "Log cumulative dosimeter badge reading and schedule baseline lymphocyte count.",
+        "targetSubsystem": "DOSIMETRY AUDIT",
+        "critical": false
+      }
+    ]
+  },
+  {
+    "conditionId": "EXMC_04_SANS_FLUID_SHIFT",
+    "iclCode": "ExMC-04 / ICL-SANS-3.1",
+    "title": "Spaceflight-Associated Neuro-ocular Syndrome (SANS) & Fluid Shift",
+    "earthClinicTitle": "Elevated Intracranial / Intraocular Pressure & Optic Disc Edema",
+    "defaultSeverityGrade": "GRADE_2",
+    "crewStatus": "WARNING",
+    "timeToImpairmentText": "Progressive visual acuity shift & optic nerve sheath distension",
+    "diagnosticCriteriaSummary": "Cephalic venous engorgement > +20% AND IOP > 18 mmHg OR Optic Nerve Sheath > 5.8 mm.",
+    "flightSurgeonDirective": "SANS ADVISORY: Marked headward venous fluid shift (+22%) with elevated intraocular pressure and Grade 1-2 optic disc edema. Initiate Lower Body Negative Pressure (LBNP) therapy and optical scan.",
+    "earthClinicDirective": "NEURO-OCULAR ADVISORY: Elevated intraocular pressure and optic disc swelling detected. Perform fundus/optical scan and elevate patient head 30 degrees.",
+    "checklistSteps": [
+      {
+        "id": "sans-1",
+        "stepNumber": 1,
+        "instruction": "Enter Lower Body Negative Pressure (LBNP) chamber at -30 mmHg for 30 minutes.",
+        "earthClinicInstruction": "Elevate patient head-of-bed to 30 degrees and avoid jugular venous compression.",
+        "targetSubsystem": "LBNP COUNTERMEASURE",
+        "critical": true
+      },
+      {
+        "id": "sans-2",
+        "stepNumber": 2,
+        "instruction": "Perform Multi-Modal Optical Scan of retinal optic disc and macula to grade papilledema.",
+        "earthClinicInstruction": "Capture retinal fundus / anterior eye image via Multi-Modal Optical Scanner.",
+        "targetSubsystem": "OPTICAL SCANNER",
+        "critical": true
+      },
+      {
+        "id": "sans-3",
+        "stepNumber": 3,
+        "instruction": "Launch Guided Self-Assessment Wizard to measure Optic Nerve Sheath Diameter (ONSD).",
+        "earthClinicInstruction": "Perform guided point-of-care ocular ultrasound to measure optic nerve sheath.",
+        "targetSubsystem": "ULTRASOUND WIZARD",
+        "critical": false
+      },
+      {
+        "id": "sans-4",
+        "stepNumber": 4,
+        "instruction": "Restrict high-sodium ration packs (< 2.0g Na/day) and reduce cabin pCO2 target below 0.25%.",
+        "earthClinicInstruction": "Restrict excess sodium infusion and monitor neurological visual field changes.",
+        "targetSubsystem": "NUTRITION / ECLSS",
+        "critical": false
+      }
+    ]
+  },
+  {
+    "conditionId": "EXMC_05_COGNITIVE_FATIGUE",
+    "iclCode": "ExMC-05 / ICL-FATIGUE-5.2",
+    "title": "Severe Cognitive Fatigue & Circadian Misalignment",
+    "earthClinicTitle": "Severe Clinician / Patient Autonomic Exhaustion & Sleep Debt",
+    "defaultSeverityGrade": "GRADE_2",
+    "crewStatus": "WARNING",
+    "timeToImpairmentText": "< 2 hours to critical psychomotor vigilance error threshold",
+    "diagnosticCriteriaSummary": "72h sleep debt > 6.0 hrs AND Resting HRV RMSSD < 25 ms AND Canaria Fatigue Index >= 65%.",
+    "flightSurgeonDirective": "FATIGUE ALERT: Canaria Predictive Fatigue Index exceeds 65% with autonomic HRV suppression (< 25 ms). Restrict EVA and manual docking tasks immediately.",
+    "earthClinicDirective": "FATIGUE ALERT: Severe autonomic stress and cumulative sleep debt detected. Mandate immediate rest rotation and 480nm alertness protocol.",
+    "checklistSteps": [
+      {
+        "id": "fat-1",
+        "stepNumber": 1,
+        "instruction": "Reassign high-risk EVA, robotic arm, or manual thruster operations to rested crew member.",
+        "earthClinicInstruction": "Rotate fatigued responder off high-acuity procedures and mandate rest break.",
+        "targetSubsystem": "MISSION OPS",
+        "critical": true
+      },
+      {
+        "id": "fat-2",
+        "stepNumber": 2,
+        "instruction": "Set Habitat Solid-State Lighting Assembly (SSLA) to 480nm blue-enriched phase reset.",
+        "earthClinicInstruction": "Adjust clinical ward lighting and administer controlled hydration/electrolytes.",
+        "targetSubsystem": "CIRCADIAN LIGHTING",
+        "critical": false
+      },
+      {
+        "id": "fat-3",
+        "stepNumber": 3,
+        "instruction": "Schedule uninterrupted 8-hour sleep block in acoustic crew quarters with melatonin 3mg.",
+        "earthClinicInstruction": "Log autonomic HRV recovery score after 6-hour protected rest window.",
+        "targetSubsystem": "SLEEP COUNTERMEASURE",
+        "critical": true
+      }
+    ]
+  }
+]
