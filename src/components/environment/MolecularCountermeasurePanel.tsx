@@ -141,8 +141,11 @@ export function MolecularCountermeasurePanel({
             {assessment.estimatedDnaDsbPerCell.toFixed(3)} / cell
           </span>
           <span className="text-[10px] text-cockpit-muted block">
-            FLUX: {radiationRateMsvHr.toFixed(2)} mSv/h
+            FLUX: {radiationRateMsvHr.toFixed(2)} mSv/h (Safe &lt; 0.050/cell)
           </span>
+          <p className="text-[10px] font-sans text-cockpit-muted mt-1 leading-snug">
+            Microscopic DNA strand snaps from space radiation.
+          </p>
         </div>
 
         <div className="bg-space-void/90 border border-space-border rounded-lg p-2.5">
@@ -153,8 +156,11 @@ export function MolecularCountermeasurePanel({
             {assessment.oxidativeStressIndexPct}%
           </span>
           <span className="text-[10px] text-cockpit-muted block">
-            DOSE: {cumulativeDoseMsv.toFixed(1)} mSv
+            DOSE: {cumulativeDoseMsv.toFixed(1)} mSv (Safe &lt; 35%)
           </span>
+          <p className="text-[10px] font-sans text-cockpit-muted mt-1 leading-snug">
+            Cellular &ldquo;free-radical rusting&rdquo; from radiation &amp; CO2.
+          </p>
         </div>
 
         <div className="bg-space-void/90 border border-space-border rounded-lg p-2.5">
@@ -167,6 +173,9 @@ export function MolecularCountermeasurePanel({
           <span className="text-[10px] text-cockpit-muted block mt-0.5">
             INSPIRATION4 BASELINE
           </span>
+          <p className="text-[10px] font-sans text-cockpit-muted mt-1 leading-snug">
+            Immune &amp; skin inflammation level in microgravity.
+          </p>
         </div>
       </div>
 
