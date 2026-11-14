@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-space-void: #080B10;
+  --bg-surface-hull: #0F141C;
+  --bg-surface-elevated: #161D29;
+  --border-cockpit: #232D3F;
+  --status-nominal: #10B981;
+  --status-warning: #F59E0B;
+  --status-critical: #EF4444;
+  --accent-cyan: #06B6D4;
+  --text-primary: #F8FAFC;
+  --text-muted: #64748B;
+}
+
+@layer base {
+  body {
+    background-color: var(--bg-space-void);
+    color: var(--text-primary);
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Tabular numerals prevent horizontal layout jitter during 1Hz telemetry ticks */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Subtle aerospace cockpit scanline and scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #080B10;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #232D3F;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #06B6D4;
+}
