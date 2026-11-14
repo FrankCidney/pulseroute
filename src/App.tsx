@@ -13,6 +13,7 @@ import {
 import { FlightSurgeonPanel } from './components/doctor/FlightSurgeonPanel';
 import { GuidedSelfAssessmentWizard } from './components/doctor/GuidedSelfAssessmentWizard';
 import { OpticalScannerModal } from './components/doctor/OpticalScannerModal';
+import { AiFlightSurgeonChat } from './components/doctor/AiFlightSurgeonChat';
 import { ScenarioBar } from './components/scenarios/ScenarioBar';
 import { NasaAttributionModal } from './components/scenarios/NasaAttributionModal';
 import { useAuraCockpit } from './hooks/useAuraCockpit';
@@ -142,13 +143,35 @@ export function App() {
             </div>
           )}
           {activePage === 'medical' && (
-            <FlightSurgeonPanel
-              verdict={selectedVerdict}
-              operationalMode={operationalMode}
-              completedStepIds={completedStepIds}
-              onToggleChecklistStep={handleToggleChecklistStep}
-              onOpenSelfAssessmentWizard={() => setIsWizardOpen(true)}
-            />
+            <div className="flex flex-col gap-3">
+              <FlightSurgeonPanel
+                verdict={selectedVerdict}
+                operationalMode={operationalMode}
+                completedStepIds={completedStepIds}
+                onToggleChecklistStep={handleToggleChecklistStep}
+                onOpenSelfAssessmentWizard={() => setIsWizardOpen(true)}
+              />
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
+                <div className="lg:col-span-7">
+                  <AiFlightSurgeonChat
+                    crew={selectedCrew}
+                    vitals={selectedStream.latestVitals}
+                    environment={snapshot.environment}
+                    verdict={selectedVerdict}
+                    molecular={molecularAssessment}
+                  />
+                </div>
+                <div className="lg:col-span-5">
+                  <OpticalScannerModal
+                    crewName={selectedCrew.name}
+                    fluidShift={selectedStream.latestVitals.fluidShift}
+                    radiationRateMsvHr={
+                      selectedStream.latestVitals.personalRadiationRateMsvHr
+                    }
+                  />
+                </div>
+              </div>
+            </div>
           )}
           {activePage === 'crew' && (
             <CrewRoster
@@ -191,14 +214,6 @@ export function App() {
         onClearBursts={() => {
           void handleClearBursts();
         }}
-      />
-
-      <OpticalScannerModal
-        crewName={selectedCrew.name}
-        fluidShift={selectedStream.latestVitals.fluidShift}
-        radiationRateMsvHr={
-          selectedStream.latestVitals.personalRadiationRateMsvHr
-        }
       />
     </>
   );
