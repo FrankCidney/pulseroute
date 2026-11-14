@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Shield } from 'lucide-react';
+import { Shield, Bot, ArrowRight } from 'lucide-react';
 import { TopHudBar } from './components/layout/TopHudBar';
+import { generatePlainEnglishOverviewBriefing } from './engine/flightSurgeonNarrator';
 import { PageNav } from './components/layout/PageNav';
 import { CrewRoster } from './components/crew/CrewRoster';
 import { VitalsGrid } from './components/telemetry/VitalsGrid';
@@ -115,6 +116,7 @@ export function App() {
               activeScenarioId={activeScenarioId}
               activeEmergencyCount={activeEmergencyCount}
               onSelectCrew={setSelectedCrewId}
+              onOpenMedicalTab={() => setActivePage('medical')}
             />
           )}
           {activePage === 'telemetry' && (
@@ -230,6 +232,7 @@ interface OverviewPageProps {
   activeScenarioId: string;
   activeEmergencyCount: number;
   onSelectCrew: (crewId: CrewId) => void;
+  onOpenMedicalTab: () => void;
 }
 
 function OverviewPage({
@@ -243,8 +246,16 @@ function OverviewPage({
   activeScenarioId,
   activeEmergencyCount,
   onSelectCrew,
+  onOpenMedicalTab,
 }: OverviewPageProps) {
   const { latestVitals } = selectedStream;
+  const plainBriefing = generatePlainEnglishOverviewBriefing({
+    crew: selectedCrew,
+    vitals: latestVitals,
+    environment,
+    verdict: selectedVerdict,
+    molecular: molecularAssessment,
+  });
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
@@ -408,6 +419,44 @@ function OverviewPage({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Plain-English AI Flight Surgeon Live Briefing Card */}
+        <div className="bg-space-hull border border-accent-cyan/40 rounded-xl p-3.5 flex flex-col gap-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-space-border pb-2">
+            <div className="flex items-center gap-2">
+              <Bot className="h-4 w-4 text-accent-cyan" />
+              <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-cockpit-primary">
+                PLAIN-ENGLISH AI FLIGHT SURGEON BRIEFING — {selectedCrew.name.toUpperCase()}
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={onOpenMedicalTab}
+              className="px-3 py-1 rounded-md bg-accent-cyan/15 hover:bg-accent-cyan/25 border border-accent-cyan/40 text-xs font-mono font-semibold text-accent-cyan flex items-center gap-1.5 transition-colors"
+            >
+              <span>ASK AI SURGEON / VIEW CHECKLIST</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          <p className="text-xs font-semibold text-cockpit-primary">
+            {plainBriefing.headline}
+          </p>
+          <ul className="space-y-1 text-xs text-cockpit-muted leading-relaxed">
+            <li>
+              <strong className="text-cockpit-primary">Body Vitals:</strong>{' '}
+              {plainBriefing.bodyExplanation}
+            </li>
+            <li>
+              <strong className="text-cockpit-primary">Spaceship Room Air:</strong>{' '}
+              {plainBriefing.roomExplanation}
+            </li>
+            <li>
+              <strong className="text-accent-cyan">What To Do Now:</strong>{' '}
+              {plainBriefing.actionExplanation}
+            </li>
+          </ul>
         </div>
       </div>
     </div>
