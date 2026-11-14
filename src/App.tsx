@@ -5,6 +5,7 @@ import { PageNav } from './components/layout/PageNav';
 import { CrewRoster } from './components/crew/CrewRoster';
 import { VitalsGrid } from './components/telemetry/VitalsGrid';
 import { EclssPanel } from './components/environment/EclssPanel';
+import { CabinAtmosphere } from './components/environment/CabinAtmosphere';
 import {
   MolecularCountermeasurePanel,
   evaluateMolecularCountermeasures,
@@ -15,6 +16,10 @@ import { OpticalScannerModal } from './components/doctor/OpticalScannerModal';
 import { ScenarioBar } from './components/scenarios/ScenarioBar';
 import { NasaAttributionModal } from './components/scenarios/NasaAttributionModal';
 import { useAuraCockpit } from './hooks/useAuraCockpit';
+import type { CrewMember, CrewId, OperationalMode } from './types/crew';
+import type { CrewTelemetryStream } from './types/telemetry';
+import type { ClinicalDiagnosisVerdict } from './types/diagnosis';
+import type { EclssEnvironment, MolecularCountermeasureAssessment } from './types/environment';
 
 type PageId = 'overview' | 'telemetry' | 'environment' | 'medical' | 'crew';
 
@@ -61,8 +66,6 @@ export function App() {
     ambientCo2Pct: snapshot.environment.cabinCo2Pct,
     hrvRmssdMs: selectedStream.latestVitals.hrvRmssdMs,
   });
-
-  const isMarsMode = operationalMode === 'MARS_TRANSIT';
 
   return (
     <>
@@ -159,9 +162,14 @@ export function App() {
 
         <footer className="border-t border-space-border bg-space-hull px-4 py-2.5 text-xs font-mono text-cockpit-muted">
           <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-2">
-            <span>
-              AURA DETERMINISTIC CLINICAL CORE • NASA ExMC ICL 1.0 &amp; OSDR (OSD-574 / OSD-379)
-            </span>
+            <div className="flex flex-wrap items-center gap-3">
+              <span>
+                AURA DETERMINISTIC CLINICAL CORE • NASA ExMC ICL 1.0 &amp; OSDR (OSD-574 / OSD-379)
+              </span>
+              {lastBurstToast && (
+                <span className="text-accent-cyan">{lastBurstToast}</span>
+              )}
+            </div>
             <span className="text-status-nominal">
               INDEXEDDB (DEXIE) STORE-AND-FORWARD ACTIVE • 0% AI HALLUCINATION RISK
             </span>
@@ -196,6 +204,19 @@ export function App() {
   );
 }
 
+interface OverviewPageProps {
+  crewMembers: readonly CrewMember[];
+  selectedCrew: CrewMember;
+  selectedStream: CrewTelemetryStream;
+  selectedVerdict: ClinicalDiagnosisVerdict;
+  environment: EclssEnvironment;
+  molecularAssessment: MolecularCountermeasureAssessment;
+  operationalMode: OperationalMode;
+  activeScenarioId: string;
+  activeEmergencyCount: number;
+  onSelectCrew: (crewId: CrewId) => void;
+}
+
 function OverviewPage({
   crewMembers,
   selectedCrew,
@@ -207,20 +228,8 @@ function OverviewPage({
   activeScenarioId,
   activeEmergencyCount,
   onSelectCrew,
-}: {
-  crewMembers: readonly import('../../types/crew').CrewMember[];
-  selectedCrew: import('../../types/crew').CrewMember;
-  selectedStream: import('../../types/telemetry').CrewTelemetryStream;
-  selectedVerdict: import('../../types/diagnosis').ClinicalDiagnosisVerdict;
-  environment: import('../../types/environment').EclssEnvironment;
-  molecularAssessment: import('../../types/environment').MolecularCountermeasureAssessment;
-  operationalMode: import('../../types/crew').OperationalMode;
-  activeScenarioId: string;
-  activeEmergencyCount: number;
-  onSelectCrew: (crewId: import('../../types/crew').CrewId) => void;
-}) {
+}: OverviewPageProps) {
   const { latestVitals } = selectedStream;
-  const isMarsMode = operationalMode === 'MARS_TRANSIT';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
@@ -232,6 +241,25 @@ function OverviewPage({
           onSelectCrew={onSelectCrew}
           operationalMode={operationalMode}
         />
+        <div className="bg-space-hull border border-space-border rounded-xl p-3 flex flex-col gap-2">
+          <div className="flex items-center justify-between border-b border-space-border pb-1.5">
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-cockpit-primary">
+              CABIN ENVIRONMENT
+            </h2>
+            <span
+              className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+                environment.overallStatus === 'CRITICAL'
+                  ? 'bg-status-critical/20 text-status-critical border-status-critical'
+                  : environment.overallStatus === 'WARNING'
+                    ? 'bg-status-warning/15 text-status-warning border-status-warning/40'
+                    : 'bg-status-nominal/15 text-status-nominal border-status-nominal/30'
+              }`}
+            >
+              {environment.overallStatus}
+            </span>
+          </div>
+          <CabinAtmosphere environment={environment} operationalMode={operationalMode} />
+        </div>
       </div>
 
       {/* Right column: vitals summary + status */}
