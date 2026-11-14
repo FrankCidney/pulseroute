@@ -173,7 +173,7 @@ export function interpretFreeTextSymptomOrQuestion(
   ctx: NarratorContext
 ): { title: string; content: string; symptomAlerts: string[] } {
   const q = rawInput.toLowerCase();
-  const { crew, vitals, environment, verdict, molecular } = ctx;
+  const { crew, vitals, environment, molecular } = ctx;
   const symptomAlerts: string[] = [];
 
   // 1. Check for subjective human symptoms reported by the astronaut

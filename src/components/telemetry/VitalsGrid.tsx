@@ -108,6 +108,7 @@ export function VitalsGrid({
           unit="BPM"
           secondaryLabel={`REST: ${selectedCrew.baseline.restingHeartRateBpm} BPM`}
           nominalRangeText="55 – 95 BPM"
+          plainEnglishHint="Heartbeats/min. >105 BPM at rest signals low oxygen, high CO2, or stress."
           status={hrStatus}
           icon={<Heart className="h-4 w-4" />}
         />
@@ -118,6 +119,7 @@ export function VitalsGrid({
           unit="%"
           secondaryLabel={`PP: ${latestVitals.systolicBpMmHg}/${latestVitals.diastolicBpMmHg}`}
           nominalRangeText="95.0 – 100.0%"
+          plainEnglishHint="Oxygen carried by red blood cells. <90% causes hypoxic blackout in minutes."
           status={spo2Status}
           icon={<Activity className="h-4 w-4" />}
         />
@@ -130,6 +132,7 @@ export function VitalsGrid({
             latestVitals.hrvRmssdMs < 25 ? 'SYMPATHETIC SURGE' : 'AUTONOMIC BALANCED'
           }
           nominalRangeText="> 30 ms (OSD-574)"
+          plainEnglishHint="Nervous system recovery score. Higher (>40ms) = calm; <25ms = severe stress."
           status={hrvStatus}
           icon={<Activity className="h-4 w-4" />}
         />
@@ -148,6 +151,7 @@ export function VitalsGrid({
           unit="°C"
           secondaryLabel={`SKIN: ${latestVitals.skinTempCelsius.toFixed(1)} °C`}
           nominalRangeText="36.3 – 37.5 °C"
+          plainEnglishHint="Internal body temp (37°C = 98.6°F). >38°C indicates fever or thermal load."
           status={tempStatus}
           icon={<Thermometer className="h-4 w-4" />}
         />
@@ -158,6 +162,7 @@ export function VitalsGrid({
           unit="BrPM"
           secondaryLabel={`CO2: ${ambientCo2Pct.toFixed(2)}%`}
           nominalRangeText="12 – 20 BrPM"
+          plainEnglishHint="Breaths per minute. >22 BrPM means gasping from toxic room CO2 or low O2."
           status={respStatus}
           icon={<Wind className="h-4 w-4" />}
         />
@@ -168,6 +173,7 @@ export function VitalsGrid({
           unit="% VENOUS"
           secondaryLabel={`IOP: ${latestVitals.fluidShift.intraocularPressureMmHg.toFixed(1)} mmHg`}
           nominalRangeText="< +18% | IOP < 18"
+          plainEnglishHint="Extra blood pooled in the head in 0G. >+20% swells the back of the eyes (SANS)."
           status={fluidStatus}
           icon={<Eye className="h-4 w-4" />}
         />
@@ -178,6 +184,7 @@ export function VitalsGrid({
           unit="mSv/h"
           secondaryLabel={`CAREER: ${latestVitals.cumulativeMissionDoseMsv.toFixed(1)}/${latestVitals.careerAlaraLimitMsv} mSv`}
           nominalRangeText="< 0.08 mSv/h ALARA"
+          plainEnglishHint="Space radiation hitting the body now. >5.0 mSv/h = deadly Solar Storm."
           status={radStatus}
           icon={<Radiation className="h-4 w-4" />}
         />
