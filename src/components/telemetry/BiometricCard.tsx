@@ -7,6 +7,7 @@ export interface BiometricCardProps {
   unit: string;
   secondaryLabel: string;
   nominalRangeText: string;
+  plainEnglishHint?: string;
   status: CrewHealthStatus;
   icon: ReactNode;
   children?: ReactNode;
@@ -53,6 +54,7 @@ export function BiometricCard({
   unit,
   secondaryLabel,
   nominalRangeText,
+  plainEnglishHint,
   status,
   icon,
   children,
@@ -90,6 +92,13 @@ export function BiometricCard({
           {secondaryLabel}
         </span>
       </div>
+
+      {/* Plain-English Subtitle */}
+      {plainEnglishHint ? (
+        <p className="text-[11px] text-cockpit-muted leading-snug">
+          {plainEnglishHint}
+        </p>
+      ) : null}
 
       {/* Optional Sparkline or Sub-Widget Slot */}
       {children ? <div className="pt-0.5">{children}</div> : null}
