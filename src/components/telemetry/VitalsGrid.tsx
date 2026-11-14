@@ -63,11 +63,11 @@ export function VitalsGrid({
 
   return (
     <section
-      className="bg-space-hull border border-space-border rounded-xl p-4 flex flex-col gap-3.5"
+      className="bg-space-hull border border-space-border rounded-xl p-3 flex flex-col gap-3"
       aria-label="Fused Biometric Telemetry HUD"
     >
       {/* Section Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-space-border pb-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-space-border pb-2">
         <div className="flex items-center gap-2.5">
           <Gauge className="h-4 w-4 text-accent-cyan" />
           <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-cockpit-primary">
@@ -101,7 +101,7 @@ export function VitalsGrid({
       />
 
       {/* Primary 4-Column Biometric & Canaria Fatigue Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5">
         <BiometricCard
           title="HEART RATE (ECG)"
           primaryValue={String(latestVitals.heartRateBpm)}
@@ -141,7 +141,7 @@ export function VitalsGrid({
       </div>
 
       {/* Secondary 4-Column Core Temp, Respiration, Cephalic Fluid Shift & Dosimetry Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2.5">
         <BiometricCard
           title="CORE TEMPERATURE"
           primaryValue={latestVitals.coreTempCelsius.toFixed(1)}

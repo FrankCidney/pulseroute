@@ -36,24 +36,24 @@ export function CockpitShell({
       </div>
 
       {/* Main Single-Screen Cockpit Grid */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto p-4 flex flex-col gap-4">
+      <main className="flex-1 max-w-[1600px] w-full mx-auto p-3 flex flex-col gap-3">
         {/* Upper Quadrant: Left Crew Roster + Right Biometric & ECLSS Sensor Fusion */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-          <div className="lg:col-span-4 xl:col-span-3 flex flex-col gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 items-start">
+          <div className="md:col-span-1 lg:col-span-4 xl:col-span-3 flex flex-col gap-3">
             {crewRoster}
             {eclssPanel}
           </div>
 
-          <div className="lg:col-span-8 xl:col-span-9 flex flex-col gap-4">
+          <div className="md:col-span-1 lg:col-span-8 xl:col-span-9 flex flex-col gap-3">
             {telemetryHud}
             {flightSurgeonPanel}
           </div>
         </div>
 
         {/* Lower Quadrant: NASA OSDR Molecular Countermeasures + Multi-Modal Optical Scanner */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <div className="lg:col-span-7">{molecularPanel}</div>
-          <div className="lg:col-span-5">{opticalScannerTrigger}</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3">
+          <div className="md:col-span-1 lg:col-span-7">{molecularPanel}</div>
+          <div className="md:col-span-1 lg:col-span-5">{opticalScannerTrigger}</div>
         </div>
       </main>
 

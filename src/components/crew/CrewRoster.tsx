@@ -49,7 +49,7 @@ export function CrewRoster({
 
   return (
     <aside
-      className="bg-space-hull border border-space-border rounded-xl p-4 flex flex-col gap-3"
+      className="bg-space-hull border border-space-border rounded-xl p-3 flex flex-col gap-2.5"
       aria-label={isMarsMode ? 'Spacecraft Crew Roster' : 'Field Clinic Patient Roster'}
     >
       <div className="flex items-center justify-between border-b border-space-border pb-2.5">

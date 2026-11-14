@@ -53,10 +53,10 @@ export function TopHudBar({
   const isMarsMode = operationalMode === 'MARS_TRANSIT';
 
   return (
-    <header className="bg-space-hull border-b border-space-border px-4 py-3 select-none">
-      <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-3">
+    <header className="bg-space-hull border-b border-space-border px-3 py-2.5 select-none">
+      <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-2">
         {/* Left Brand & Mission Telemetry Strip */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2.5 pr-3 border-r border-space-border">
             <div
               className={`h-11 w-11 rounded-lg flex items-center justify-center border transition-colors ${
