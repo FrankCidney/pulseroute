@@ -27,6 +27,7 @@ The public challenge listing describes the challenge as intermediate and focuses
 - A simplified overview of crew status, sample health readings, and cabin conditions.
 - Five repeatable demo situations: baseline, solar storm, high cabin CO₂, low cabin pressure, and fluid-shift / eye-risk indicators.
 - Rule-based scenario alerts, a guided self-check flow, and illustrative response checklists.
+- Crew check-in reports that pair self-reported descriptions with clearly labeled simulated readings; reports can be reviewed and exported from local browser storage.
 - Local browser storage for incident records and saved sample snapshots.
 - Progressive Web App configuration intended to support offline use.
 - A sources panel that identifies the NASA references currently listed in the project.

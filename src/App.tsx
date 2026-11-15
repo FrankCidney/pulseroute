@@ -12,6 +12,7 @@ import {
 } from './components/environment/MolecularCountermeasurePanel';
 import { FlightSurgeonPanel } from './components/doctor/FlightSurgeonPanel';
 import { GuidedSelfAssessmentWizard } from './components/doctor/GuidedSelfAssessmentWizard';
+import { CrewCheckInReport } from './components/doctor/CrewCheckInReport';
 import { ScenarioBar } from './components/scenarios/ScenarioBar';
 import { NasaAttributionModal } from './components/scenarios/NasaAttributionModal';
 import { useAuraCockpit } from './hooks/useAuraCockpit';
@@ -112,6 +113,7 @@ export function App() {
               activeEmergencyCount={activeEmergencyCount}
               onSelectCrew={setSelectedCrewId}
               onOpenMedicalTab={() => setActivePage('medical')}
+              scenarioId={activeScenarioId}
             />
           )}
           {activePage === 'telemetry' && (
@@ -213,6 +215,7 @@ interface OverviewPageProps {
   activeEmergencyCount: number;
   onSelectCrew: (crewId: CrewId) => void;
   onOpenMedicalTab: () => void;
+  scenarioId: ScenarioId;
 }
 
 function OverviewPage({
@@ -226,6 +229,7 @@ function OverviewPage({
   activeEmergencyCount,
   onSelectCrew,
   onOpenMedicalTab,
+  scenarioId,
 }: OverviewPageProps) {
   const { latestVitals } = selectedStream;
   const activeScenario = getScenarioPresetById(activeScenarioId);
@@ -339,6 +343,15 @@ function OverviewPage({
           </div>
         </section>
       </div>
+
+      <CrewCheckInReport
+        crew={selectedCrew}
+        scenarioId={scenarioId}
+        scenarioLabel={activeScenario.shortTitle}
+        vitals={latestVitals}
+        environment={environment}
+        verdict={selectedVerdict}
+      />
     </div>
   );
 }

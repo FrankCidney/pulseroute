@@ -31,6 +31,26 @@ export interface EarthBurstPacket {
   transmissionStatus: 'QUEUED_FOR_WINDOW' | 'TRANSMITTING' | 'ACKNOWLEDGED_MCC';
 }
 
+export interface CrewCheckInReport {
+  id?: number;
+  createdAtIso: string;
+  crewId: CrewId;
+  crewName: string;
+  scenarioId: string;
+  scenarioLabel: string;
+  concernLevel: 'LOW' | 'MODERATE' | 'HIGH';
+  reportedDuration: string;
+  description: string;
+  readings: {
+    heartRateBpm: number;
+    spO2Pct: number;
+    respirationRateBrPm: number;
+    cabinCo2Pct: number;
+    personalRadiationRateMsvHr: number;
+  };
+  prototypeAlert: string;
+}
+
 // --- Dexie.js Browser-Native IndexedDB Instance ---
 // Stores clinical events and store-and-forward telemetry bundles locally so zero data
 // is lost during 44-minute Mars round-trip radio delays or 14-day solar conjunction blackouts.
@@ -38,12 +58,18 @@ export interface EarthBurstPacket {
 class AuraOfflineDatabase extends Dexie {
   incidentLogs!: Table<MedicalIncidentLog, number>;
   earthBurstQueue!: Table<EarthBurstPacket, number>;
+  crewCheckInReports!: Table<CrewCheckInReport, number>;
 
   constructor() {
     super('AuraFlightSurgeonDB');
     this.version(1).stores({
       incidentLogs: '++id, timestampIso, crewId, conditionCode, severity',
       earthBurstQueue: '++id, queuedAtIso, crewId, conditionCode, transmissionStatus',
+    });
+    this.version(2).stores({
+      incidentLogs: '++id, timestampIso, crewId, conditionCode, severity',
+      earthBurstQueue: '++id, queuedAtIso, crewId, conditionCode, transmissionStatus',
+      crewCheckInReports: '++id, createdAtIso, crewId, scenarioId',
     });
   }
 }
@@ -109,6 +135,33 @@ export async function getQueuedEarthBursts(limit = 20): Promise<EarthBurstPacket
   } catch {
     return [];
   }
+}
+
+export async function saveCrewCheckInReport(
+  report: Omit<CrewCheckInReport, 'id' | 'createdAtIso'>
+): Promise<CrewCheckInReport> {
+  const savedReport = {
+    ...report,
+    createdAtIso: new Date().toISOString(),
+  };
+  const id = await offlineDb.crewCheckInReports.add(savedReport);
+  return { ...savedReport, id };
+}
+
+export async function getCrewCheckInReports(
+  crewId: CrewId,
+  limit = 5
+): Promise<CrewCheckInReport[]> {
+  return offlineDb.crewCheckInReports
+    .where('crewId')
+    .equals(crewId)
+    .reverse()
+    .limit(limit)
+    .toArray();
+}
+
+export async function deleteCrewCheckInReport(id: number): Promise<void> {
+  await offlineDb.crewCheckInReports.delete(id);
 }
 
 export async function clearTransmittedEarthBursts(): Promise<void> {
