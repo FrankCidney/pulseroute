@@ -82,9 +82,14 @@ async function ensureModelLoaded(
         };
       }
 
+      const isOffline =
+        typeof self.navigator !== 'undefined' && self.navigator.onLine === false;
+
       postWorkerMessage({
         type: 'MODEL_PROGRESS',
-        statusText: `Connecting to model cache for ${modelId}...`,
+        statusText: isOffline
+          ? `Checking offline disk cache for ${modelId}...`
+          : `Connecting to model cache for ${modelId}...`,
         progressPct: 14,
       });
 
@@ -99,67 +104,88 @@ async function ensureModelLoaded(
         });
       };
 
-      generatorInstance = await pipeline('text-generation', modelId, {
-        dtype: 'q4',
-        device: activeDevice,
-        progress_callback: (info: {
-          status?: string;
-          progress?: number;
-          loaded?: number;
-          total?: number;
-          file?: string;
-        }) => {
-          const fileName = info.file ?? 'model asset';
-          const isOnnxWeights = fileName.endsWith('.onnx');
+      const handleProgress = (info: {
+        status?: string;
+        progress?: number;
+        loaded?: number;
+        total?: number;
+        file?: string;
+      }) => {
+        const fileName = info.file ?? 'model asset';
+        const isOnnxWeights = fileName.endsWith('.onnx');
 
-          if (info.status === 'initiate' || info.status === 'download') {
+        if (info.status === 'initiate' || info.status === 'download') {
+          reportProgress(
+            isOnnxWeights ? 22 : 16,
+            isOnnxWeights
+              ? `Loading ${fileName}...`
+              : `Reading ${fileName}...`
+          );
+          return;
+        }
+
+        if (typeof info.progress === 'number') {
+          if (isOnnxWeights) {
+            // Map the main .onnx weights download/cache read smoothly across 22% -> 92%
+            const mappedPct = 22 + (info.progress / 100) * 70;
+            const sizeDetail =
+              typeof info.loaded === 'number' && typeof info.total === 'number' && info.total > 0
+                ? `${(info.loaded / (1024 * 1024)).toFixed(1)} / ${(info.total / (1024 * 1024)).toFixed(1)} MB`
+                : `${Math.round(info.progress)}%`;
             reportProgress(
-              isOnnxWeights ? 22 : 16,
-              isOnnxWeights
-                ? `Starting download of ${fileName}...`
-                : `Fetching ${fileName}...`
+              mappedPct,
+              `Caching ${fileName} (${sizeDetail})...`
             );
-            return;
-          }
-
-          if (typeof info.progress === 'number') {
-            if (isOnnxWeights) {
-              // Map the main .onnx weights download smoothly across 22% -> 92%
-              const mappedPct = 22 + (info.progress / 100) * 70;
-              const sizeDetail =
-                typeof info.loaded === 'number' && typeof info.total === 'number' && info.total > 0
-                  ? `${(info.loaded / (1024 * 1024)).toFixed(1)} / ${(info.total / (1024 * 1024)).toFixed(1)} MB`
-                  : `${Math.round(info.progress)}%`;
-              reportProgress(
-                mappedPct,
-                `Caching ${fileName} (${sizeDetail})...`
-              );
-            } else {
-              reportProgress(
-                18 + (info.progress / 100) * 4,
-                `Loaded ${fileName} (${Math.round(info.progress)}%)`
-              );
-            }
-            return;
-          }
-
-          if (typeof info.loaded === 'number' && info.loaded > 0) {
-            const mb = (info.loaded / (1024 * 1024)).toFixed(1);
+          } else {
             reportProgress(
-              isOnnxWeights ? 55 : 20,
-              `Downloading ${fileName} (${mb} MB received)...`
-            );
-            return;
-          }
-
-          if (info.status === 'done' && isOnnxWeights) {
-            reportProgress(
-              95,
-              'Compiling ONNX model in browser WebAssembly runtime...'
+              18 + (info.progress / 100) * 4,
+              `Loaded ${fileName} (${Math.round(info.progress)}%)`
             );
           }
-        },
-      });
+          return;
+        }
+
+        if (typeof info.loaded === 'number' && info.loaded > 0) {
+          const mb = (info.loaded / (1024 * 1024)).toFixed(1);
+          reportProgress(
+            isOnnxWeights ? 55 : 20,
+            `Loading ${fileName} (${mb} MB)...`
+          );
+          return;
+        }
+
+        if (info.status === 'done' && isOnnxWeights) {
+          reportProgress(
+            95,
+            'Compiling ONNX model in browser WebAssembly runtime...'
+          );
+        }
+      };
+
+      try {
+        generatorInstance = await pipeline('text-generation', modelId, {
+          dtype: 'q4',
+          device: activeDevice,
+          local_files_only: isOffline,
+          progress_callback: handleProgress,
+        });
+      } catch (firstErr) {
+        // If the browser reported navigator.onLine=true but the network failed
+        // (e.g. disconnected Wi-Fi or deep-space simulation after weights were cached),
+        // retry strictly against the local browser Cache API (local_files_only: true)
+        // so optional missing files don't trigger failed network fetches.
+        if (!isOffline) {
+          reportProgress(20, 'Network unavailable — checking local offline cache...');
+          generatorInstance = await pipeline('text-generation', modelId, {
+            dtype: 'q4',
+            device: activeDevice,
+            local_files_only: true,
+            progress_callback: handleProgress,
+          });
+        } else {
+          throw firstErr;
+        }
+      }
 
       postWorkerMessage({
         type: 'MODEL_READY',
@@ -184,10 +210,13 @@ self.addEventListener('message', async (event: MessageEvent<LlmWorkerRequest>) =
     try {
       await ensureModelLoaded(payload.modelId || DEFAULT_MODEL_ID);
     } catch (err) {
+      const isOffline =
+        typeof self.navigator !== 'undefined' && self.navigator.onLine === false;
       postWorkerMessage({
         type: 'WORKER_ERROR',
-        errorMessage:
-          err instanceof Error
+        errorMessage: isOffline
+          ? 'Offline mode: neural weights not yet cached on this device. Instant rule-based replies are active.'
+          : err instanceof Error
             ? `Could not load on-device model (${err.message}). Rule-based replies remain active.`
             : 'Unable to initialize offline neural model; using rule-based replies.',
       });
@@ -198,17 +227,36 @@ self.addEventListener('message', async (event: MessageEvent<LlmWorkerRequest>) =
   if (payload.type === 'GENERATE_RESPONSE') {
     try {
       const generator = await ensureModelLoaded(DEFAULT_MODEL_ID);
+      const { TextStreamer } = await import('@huggingface/transformers');
 
       const messages = [
         { role: 'system', content: payload.systemPrompt },
         { role: 'user', content: payload.userMessage },
       ];
 
+      let streamedText = '';
+      const streamer = new TextStreamer(generator.tokenizer, {
+        skip_prompt: true,
+        skip_special_tokens: true,
+        callback_function: (tokenText: string) => {
+          streamedText += tokenText;
+          const cleaned = streamedText.trimStart();
+          if (cleaned) {
+            postWorkerMessage({
+              type: 'GENERATION_STREAM',
+              requestId: payload.requestId,
+              partialText: cleaned,
+            });
+          }
+        },
+      });
+
       const output = await generator(messages, {
-        max_new_tokens: 160,
+        max_new_tokens: 120,
         temperature: 0.2,
         do_sample: false,
         return_full_text: false,
+        streamer,
       });
 
       const firstItem = Array.isArray(output) ? output[0] : output;
@@ -225,6 +273,8 @@ self.addEventListener('message', async (event: MessageEvent<LlmWorkerRequest>) =
       } else if (Array.isArray(generated) && generated.length > 0) {
         const lastMsg = generated[generated.length - 1] as { content?: string };
         replyText = (lastMsg?.content ?? '').trim();
+      } else if (streamedText.trim()) {
+        replyText = streamedText.trim();
       }
 
       postWorkerMessage({

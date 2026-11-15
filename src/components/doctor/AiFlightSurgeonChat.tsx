@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   MessageSquare,
   Send,
@@ -36,6 +36,8 @@ export interface AiFlightSurgeonChatProps {
   molecular: MolecularCountermeasureAssessment;
 }
 
+const DEFAULT_MODEL_ID = 'HuggingFaceTB/SmolLM2-135M-Instruct';
+
 const QUICK_EXPLAINER_BUTTONS: readonly {
   intent: QuickPromptIntent;
   label: string;
@@ -47,6 +49,153 @@ const QUICK_EXPLAINER_BUTTONS: readonly {
   { intent: 'EXPLAIN_SANS_AND_EYES', label: 'Explain fluid-shift indicators' },
 ];
 
+// --- Persistent Module-Level Singleton Worker State ---
+// Keeping the worker at module scope ensures the model pre-warms automatically
+// when the app launches and stays hot in RAM when switching between Overview and Medical tabs.
+type NeuralModelStatus = 'UNLOADED' | 'LOADING' | 'READY' | 'ERROR';
+
+interface SharedNeuralState {
+  status: NeuralModelStatus;
+  progressPct: number;
+  statusText: string;
+  preferredMode: AiSurgeonEngineMode;
+}
+
+let sharedWorker: Worker | null = null;
+let hasAutoStartedPreload = false;
+let sharedState: SharedNeuralState = {
+  status: 'UNLOADED',
+  progressPct: 0,
+  statusText: 'Optional experimental text helper',
+  preferredMode: 'INSTANT_NARRATOR',
+};
+
+const stateSubscribers = new Set<(state: SharedNeuralState) => void>();
+const messageSubscribers = new Set<(msg: LlmWorkerResponse) => void>();
+
+function updateSharedState(patch: Partial<SharedNeuralState>) {
+  sharedState = { ...sharedState, ...patch };
+  for (const sub of stateSubscribers) {
+    sub(sharedState);
+  }
+}
+
+function broadcastWorkerMessage(msg: LlmWorkerResponse) {
+  for (const sub of messageSubscribers) {
+    sub(msg);
+  }
+}
+
+function ensureSharedWorker(): Worker {
+  if (sharedWorker) {
+    return sharedWorker;
+  }
+
+  const worker = new Worker(
+    new URL('../../workers/llmSurgeonWorker.ts', import.meta.url),
+    { type: 'module' }
+  );
+
+  worker.onmessage = (event: MessageEvent<LlmWorkerResponse>) => {
+    const msg = event.data;
+    if (msg.type === 'MODEL_PROGRESS') {
+      updateSharedState({
+        status: 'LOADING',
+        progressPct: msg.progressPct,
+        statusText: msg.statusText,
+      });
+    } else if (msg.type === 'MODEL_READY') {
+      updateSharedState({
+        status: 'READY',
+        progressPct: 100,
+        statusText: `Experimental on-device model ready (${msg.deviceUsed.toUpperCase()})`,
+        preferredMode: 'NEURAL_WEB_LLM',
+      });
+    } else if (msg.type === 'WORKER_ERROR') {
+      // Only mark model status as ERROR if the model wasn't already loaded
+      if (sharedState.status !== 'READY') {
+        updateSharedState({
+          status: 'ERROR',
+          preferredMode: 'INSTANT_NARRATOR',
+          statusText: msg.errorMessage,
+        });
+      }
+    }
+    broadcastWorkerMessage(msg);
+  };
+
+  worker.onerror = (errEvent) => {
+    errEvent.preventDefault();
+    if (sharedWorker) {
+      sharedWorker.terminate();
+      sharedWorker = null;
+    }
+    const errorMessage =
+      errEvent.message ||
+      'Background AI worker failed to initialize. Rule-based replies remain active.';
+    updateSharedState({
+      status: 'ERROR',
+      preferredMode: 'INSTANT_NARRATOR',
+      statusText: errorMessage,
+    });
+    broadcastWorkerMessage({
+      type: 'WORKER_ERROR',
+      errorMessage,
+    });
+  };
+
+  worker.onmessageerror = () => {
+    const errorMessage =
+      'Worker communication error. Rule-based replies remain active.';
+    updateSharedState({
+      status: 'ERROR',
+      preferredMode: 'INSTANT_NARRATOR',
+      statusText: errorMessage,
+    });
+    broadcastWorkerMessage({
+      type: 'WORKER_ERROR',
+      errorMessage,
+    });
+  };
+
+  sharedWorker = worker;
+  return worker;
+}
+
+function startSharedNeuralPreload() {
+  if (sharedState.status === 'LOADING' || sharedState.status === 'READY') {
+    return;
+  }
+  if (sharedState.status === 'ERROR' && sharedWorker) {
+    sharedWorker.terminate();
+    sharedWorker = null;
+  }
+  const worker = ensureSharedWorker();
+  updateSharedState({
+    status: 'LOADING',
+    progressPct: 5,
+    statusText: 'Starting background AI worker...',
+  });
+  const req: LlmWorkerRequest = {
+    type: 'LOAD_MODEL',
+    modelId: DEFAULT_MODEL_ID,
+  };
+  worker.postMessage(req);
+}
+
+function cancelSharedNeuralLoad() {
+  if (sharedWorker) {
+    sharedWorker.terminate();
+    sharedWorker = null;
+  }
+  updateSharedState({
+    status: 'UNLOADED',
+    progressPct: 0,
+    preferredMode: 'INSTANT_NARRATOR',
+    statusText: 'Optional experimental text helper',
+  });
+}
+
 export function AiFlightSurgeonChat({
   crew,
   vitals,
@@ -54,17 +203,15 @@ export function AiFlightSurgeonChat({
   verdict,
   molecular,
 }: AiFlightSurgeonChatProps) {
-  const [engineMode, setEngineMode] =
-    useState<AiSurgeonEngineMode>('INSTANT_NARRATOR');
-  const [neuralModelStatus, setNeuralModelStatus] = useState<
-    'UNLOADED' | 'LOADING' | 'READY' | 'ERROR'
-  >('UNLOADED');
-  const [neuralProgressPct, setNeuralProgressPct] = useState(0);
-  const [neuralStatusText, setNeuralStatusText] = useState(
-    'Optional experimental text helper'
-  );
+  const [neuralState, setNeuralState] =
+    useState<SharedNeuralState>(sharedState);
   const [isGenerating, setIsGenerating] = useState(false);
   const [inputText, setInputText] = useState('');
+
+  const engineMode = neuralState.preferredMode;
+  const neuralModelStatus = neuralState.status;
+  const neuralProgressPct = neuralState.progressPct;
+  const neuralStatusText = neuralState.statusText;
 
   const narratorCtx: NarratorContext = {
     crew,
@@ -95,7 +242,6 @@ export function AiFlightSurgeonChat({
     ];
   });
 
-  const workerRef = useRef<Worker | null>(null);
   const pendingFallbacksRef = useRef<
     Map<
       string,
@@ -132,58 +278,65 @@ export function AiFlightSurgeonChat({
     });
   }, [crew.id, verdict.primaryConditionId]);
 
-  // Clean up Web Worker on unmount
+  // Subscribe to singleton worker updates and automatically pre-warm on first app mount
   useEffect(() => {
-    return () => {
-      if (workerRef.current) {
-        workerRef.current.terminate();
-        workerRef.current = null;
-      }
-    };
-  }, []);
+    stateSubscribers.add(setNeuralState);
+    setNeuralState(sharedState);
 
-  const ensureWorkerInitialized = useCallback(() => {
-    if (workerRef.current) return workerRef.current;
-
-    const worker = new Worker(
-      new URL('../../workers/llmSurgeonWorker.ts', import.meta.url),
-      { type: 'module' }
-    );
-
-    worker.onmessage = (event: MessageEvent<LlmWorkerResponse>) => {
-      const msg = event.data;
-      if (msg.type === 'MODEL_PROGRESS') {
-        setNeuralModelStatus('LOADING');
-        setNeuralProgressPct(msg.progressPct);
-        setNeuralStatusText(msg.statusText);
-      } else if (msg.type === 'MODEL_READY') {
-        setNeuralModelStatus('READY');
-        setNeuralProgressPct(100);
-        setNeuralStatusText(
-          `Experimental on-device model ready (${msg.deviceUsed.toUpperCase()})`
-        );
-        setEngineMode('NEURAL_WEB_LLM');
-      } else if (msg.type === 'GENERATION_COMPLETE') {
-        setIsGenerating(false);
+    const handleWorkerMsg = (msg: LlmWorkerResponse) => {
+      if (msg.type === 'GENERATION_STREAM') {
         const fallback = pendingFallbacksRef.current.get(msg.requestId);
+        if (!fallback) return;
+        setIsGenerating(false);
+        const msgId = `llm-${msg.requestId}`;
+        setMessages((prev) => {
+          const exists = prev.some((m) => m.id === msgId);
+          if (exists) {
+            return prev.map((m) =>
+              m.id === msgId ? { ...m, content: msg.partialText } : m
+            );
+          }
+          return [
+            ...prev,
+            {
+              id: msgId,
+              role: 'assistant',
+              timestampLabel: new Date().toLocaleTimeString(),
+              engineSource: 'SMOLLM2_360M_ON_DEVICE',
+              title: `Experimental text helper (${latestCtxRef.current.crew.name})`,
+              content: msg.partialText,
+              symptomAlerts: fallback.symptomAlerts,
+            },
+          ];
+        });
+      } else if (msg.type === 'GENERATION_COMPLETE') {
+        const fallback = pendingFallbacksRef.current.get(msg.requestId);
+        if (!fallback) return;
         pendingFallbacksRef.current.delete(msg.requestId);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `llm-${msg.requestId}`,
-            role: 'assistant',
-            timestampLabel: new Date().toLocaleTimeString(),
-            engineSource: 'SMOLLM2_360M_ON_DEVICE',
-            title: `Experimental text helper (${latestCtxRef.current.crew.name})`,
-            content: msg.replyText,
-            symptomAlerts: fallback?.symptomAlerts,
-          },
-        ]);
+        setIsGenerating(false);
+        const msgId = `llm-${msg.requestId}`;
+        setMessages((prev) => {
+          const exists = prev.some((m) => m.id === msgId);
+          if (exists) {
+            return prev.map((m) =>
+              m.id === msgId ? { ...m, content: msg.replyText } : m
+            );
+          }
+          return [
+            ...prev,
+            {
+              id: msgId,
+              role: 'assistant',
+              timestampLabel: new Date().toLocaleTimeString(),
+              engineSource: 'SMOLLM2_360M_ON_DEVICE',
+              title: `Experimental text helper (${latestCtxRef.current.crew.name})`,
+              content: msg.replyText,
+              symptomAlerts: fallback.symptomAlerts,
+            },
+          ];
+        });
       } else if (msg.type === 'WORKER_ERROR') {
         setIsGenerating(false);
-        setNeuralModelStatus('ERROR');
-        setEngineMode('INSTANT_NARRATOR');
-        setNeuralStatusText(msg.errorMessage);
         if (msg.requestId) {
           const fallback = pendingFallbacksRef.current.get(msg.requestId);
           pendingFallbacksRef.current.delete(msg.requestId);
@@ -205,66 +358,30 @@ export function AiFlightSurgeonChat({
       }
     };
 
-    worker.onerror = (errEvent) => {
-      errEvent.preventDefault();
-      if (workerRef.current) {
-        workerRef.current.terminate();
-        workerRef.current = null;
-      }
-      setIsGenerating(false);
-      setNeuralModelStatus('ERROR');
-      setEngineMode('INSTANT_NARRATOR');
-      setNeuralStatusText(
-        errEvent.message ||
-          'Background AI worker failed to initialize. Rule-based replies remain active.'
-      );
-    };
+    messageSubscribers.add(handleWorkerMsg);
 
-    worker.onmessageerror = () => {
-      setIsGenerating(false);
-      setNeuralModelStatus('ERROR');
-      setEngineMode('INSTANT_NARRATOR');
-      setNeuralStatusText(
-        'Worker communication error. Rule-based replies remain active.'
-      );
-    };
-
-    workerRef.current = worker;
-    return worker;
-  }, []);
-
-  const handleCancelNeuralLoad = () => {
-    if (workerRef.current) {
-      workerRef.current.terminate();
-      workerRef.current = null;
+    if (!hasAutoStartedPreload) {
+      hasAutoStartedPreload = true;
+      startSharedNeuralPreload();
     }
-    setIsGenerating(false);
-    setNeuralModelStatus('UNLOADED');
-    setNeuralProgressPct(0);
-    setEngineMode('INSTANT_NARRATOR');
-    setNeuralStatusText('Optional experimental text helper');
-  };
+
+    return () => {
+      stateSubscribers.delete(setNeuralState);
+      messageSubscribers.delete(handleWorkerMsg);
+    };
+  }, []);
 
   const handleActivateNeuralLlm = () => {
     if (neuralModelStatus === 'READY') {
-      setEngineMode((m) =>
-        m === 'NEURAL_WEB_LLM' ? 'INSTANT_NARRATOR' : 'NEURAL_WEB_LLM'
-      );
+      updateSharedState({
+        preferredMode:
+          engineMode === 'NEURAL_WEB_LLM'
+            ? 'INSTANT_NARRATOR'
+            : 'NEURAL_WEB_LLM',
+      });
       return;
     }
-    if (neuralModelStatus === 'ERROR' && workerRef.current) {
-      workerRef.current.terminate();
-      workerRef.current = null;
-    }
-    const worker = ensureWorkerInitialized();
-    setNeuralModelStatus('LOADING');
-    setNeuralProgressPct(5);
-    setNeuralStatusText('Starting background AI worker...');
-    const req: LlmWorkerRequest = {
-      type: 'LOAD_MODEL',
-      modelId: 'HuggingFaceTB/SmolLM2-135M-Instruct',
-    };
-    worker.postMessage(req);
+    startSharedNeuralPreload();
   };
 
   const handleQuickPrompt = (intent: QuickPromptIntent, label: string) => {
@@ -278,7 +395,11 @@ export function AiFlightSurgeonChat({
 
     const answer = answerQuickPromptInPlainEnglish(intent, narratorCtx);
 
-    if (engineMode === 'NEURAL_WEB_LLM' && neuralModelStatus === 'READY' && workerRef.current) {
+    if (
+      engineMode === 'NEURAL_WEB_LLM' &&
+      neuralModelStatus === 'READY' &&
+      sharedWorker
+    ) {
       const requestId = String(Date.now());
       pendingFallbacksRef.current.set(requestId, answer);
       setMessages((prev) => [...prev, userMsg]);
@@ -289,7 +410,7 @@ export function AiFlightSurgeonChat({
         systemPrompt: buildGroundTruthSystemPrompt(narratorCtx),
         userMessage: label,
       };
-      workerRef.current.postMessage(req);
+      sharedWorker.postMessage(req);
       return;
     }
 
@@ -325,7 +446,11 @@ export function AiFlightSurgeonChat({
       narratorCtx
     );
 
-    if (engineMode === 'NEURAL_WEB_LLM' && neuralModelStatus === 'READY' && workerRef.current) {
+    if (
+      engineMode === 'NEURAL_WEB_LLM' &&
+      neuralModelStatus === 'READY' &&
+      sharedWorker
+    ) {
       const requestId = String(Date.now());
       pendingFallbacksRef.current.set(requestId, deterministicResult);
       setMessages((prev) => [...prev, userMsg]);
@@ -336,7 +461,7 @@ export function AiFlightSurgeonChat({
         systemPrompt: buildGroundTruthSystemPrompt(narratorCtx),
         userMessage: trimmed,
       };
-      workerRef.current.postMessage(req);
+      sharedWorker.postMessage(req);
       return;
     }
 
@@ -397,9 +522,9 @@ export function AiFlightSurgeonChat({
               {neuralModelStatus === 'READY'
                 ? engineMode === 'NEURAL_WEB_LLM'
                   ? 'USE RULE-BASED REPLIES'
-                  : 'TRY OPTIONAL ON-DEVICE AI'
+                  : 'USE ON-DEVICE AI'
                 : neuralModelStatus === 'LOADING'
-                  ? `PREPARING AI MODEL (${neuralProgressPct}%)`
+                  ? `PRELOADING AI MODEL (${neuralProgressPct}%)`
                   : neuralModelStatus === 'ERROR'
                     ? 'RETRY ON-DEVICE AI'
                     : 'TRY OPTIONAL ON-DEVICE AI'}
@@ -417,7 +542,7 @@ export function AiFlightSurgeonChat({
               <span className="text-cockpit-primary font-bold">{neuralProgressPct}%</span>
               <button
                 type="button"
-                onClick={handleCancelNeuralLoad}
+                onClick={cancelSharedNeuralLoad}
                 className="px-2 py-0.5 rounded bg-space-elevated hover:bg-space-border border border-space-border text-[10px] text-cockpit-muted hover:text-cockpit-primary transition-colors"
               >
                 Cancel
@@ -442,7 +567,7 @@ export function AiFlightSurgeonChat({
           </div>
           <button
             type="button"
-            onClick={handleCancelNeuralLoad}
+            onClick={cancelSharedNeuralLoad}
             className="px-2 py-1 rounded bg-space-void hover:bg-space-elevated border border-space-border text-[10px] font-mono text-cockpit-muted shrink-0"
           >
             Dismiss
@@ -520,7 +645,7 @@ export function AiFlightSurgeonChat({
         {isGenerating ? (
           <div className="p-3 rounded-lg bg-space-elevated border border-accent-cyan/30 text-xs font-mono text-accent-cyan flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Preparing the optional text helper…</span>
+            <span>Generating on-device AI response…</span>
           </div>
         ) : null}
       </div>
