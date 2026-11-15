@@ -26,6 +26,7 @@ import {
   buildGroundTruthSystemPrompt,
   interpretFreeTextSymptomOrQuestion,
   type NarratorContext,
+  type RuleBasedExplanation,
 } from '../../engine/flightSurgeonNarrator';
 
 export interface AiFlightSurgeonChatProps {
@@ -112,7 +113,6 @@ function ensureSharedWorker(): Worker {
         preferredMode: 'NEURAL_WEB_LLM',
       });
     } else if (msg.type === 'WORKER_ERROR') {
-      // Only mark model status as ERROR if the model wasn't already loaded
       if (sharedState.status !== 'READY') {
         updateSharedState({
           status: 'ERROR',
@@ -242,16 +242,9 @@ export function AiFlightSurgeonChat({
     ];
   });
 
-  const pendingFallbacksRef = useRef<
-    Map<
-      string,
-      {
-        title: string;
-        content: string;
-        symptomAlerts?: readonly string[];
-      }
-    >
-  >(new Map());
+  const pendingFallbacksRef = useRef<Map<string, RuleBasedExplanation>>(
+    new Map()
+  );
   const latestCtxRef = useRef<NarratorContext>(narratorCtx);
   latestCtxRef.current = narratorCtx;
 
@@ -284,57 +277,28 @@ export function AiFlightSurgeonChat({
     setNeuralState(sharedState);
 
     const handleWorkerMsg = (msg: LlmWorkerResponse) => {
-      if (msg.type === 'GENERATION_STREAM') {
-        const fallback = pendingFallbacksRef.current.get(msg.requestId);
-        if (!fallback) return;
-        setIsGenerating(false);
-        const msgId = `llm-${msg.requestId}`;
-        setMessages((prev) => {
-          const exists = prev.some((m) => m.id === msgId);
-          if (exists) {
-            return prev.map((m) =>
-              m.id === msgId ? { ...m, content: msg.partialText } : m
-            );
-          }
-          return [
-            ...prev,
-            {
-              id: msgId,
-              role: 'assistant',
-              timestampLabel: new Date().toLocaleTimeString(),
-              engineSource: 'SMOLLM2_360M_ON_DEVICE',
-              title: `Experimental text helper (${latestCtxRef.current.crew.name})`,
-              content: msg.partialText,
-              symptomAlerts: fallback.symptomAlerts,
-            },
-          ];
-        });
-      } else if (msg.type === 'GENERATION_COMPLETE') {
+      if (msg.type === 'GENERATION_COMPLETE') {
         const fallback = pendingFallbacksRef.current.get(msg.requestId);
         if (!fallback) return;
         pendingFallbacksRef.current.delete(msg.requestId);
         setIsGenerating(false);
-        const msgId = `llm-${msg.requestId}`;
-        setMessages((prev) => {
-          const exists = prev.some((m) => m.id === msgId);
-          if (exists) {
-            return prev.map((m) =>
-              m.id === msgId ? { ...m, content: msg.replyText } : m
-            );
-          }
-          return [
-            ...prev,
-            {
-              id: msgId,
-              role: 'assistant',
-              timestampLabel: new Date().toLocaleTimeString(),
-              engineSource: 'SMOLLM2_360M_ON_DEVICE',
-              title: `Experimental text helper (${latestCtxRef.current.crew.name})`,
-              content: msg.replyText,
-              symptomAlerts: fallback.symptomAlerts,
-            },
-          ];
-        });
+
+        const combinedContent = msg.replyText
+          ? `${msg.replyText}\n\n${fallback.content}`
+          : fallback.content;
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `llm-${msg.requestId}`,
+            role: 'assistant',
+            timestampLabel: new Date().toLocaleTimeString(),
+            engineSource: 'SMOLLM2_360M_ON_DEVICE',
+            title: fallback.title,
+            content: combinedContent,
+            symptomAlerts: fallback.symptomAlerts,
+          },
+        ]);
       } else if (msg.type === 'WORKER_ERROR') {
         setIsGenerating(false);
         if (msg.requestId) {
@@ -407,8 +371,8 @@ export function AiFlightSurgeonChat({
       const req: LlmWorkerRequest = {
         type: 'GENERATE_RESPONSE',
         requestId,
-        systemPrompt: buildGroundTruthSystemPrompt(narratorCtx),
-        userMessage: label,
+        systemPrompt: buildGroundTruthSystemPrompt(narratorCtx, answer),
+        userMessage: `Summarize the rule-based finding for "${label}" in 2 to 3 natural sentences for ${crew.name}.`,
       };
       sharedWorker.postMessage(req);
       return;
@@ -458,8 +422,11 @@ export function AiFlightSurgeonChat({
       const req: LlmWorkerRequest = {
         type: 'GENERATE_RESPONSE',
         requestId,
-        systemPrompt: buildGroundTruthSystemPrompt(narratorCtx),
-        userMessage: trimmed,
+        systemPrompt: buildGroundTruthSystemPrompt(
+          narratorCtx,
+          deterministicResult
+        ),
+        userMessage: `Astronaut ${crew.name} says: "${trimmed}". Reply in 2 to 3 helpful sentences based strictly on the RULE-BASED CLINICAL FINDING above.`,
       };
       sharedWorker.postMessage(req);
       return;
@@ -616,7 +583,7 @@ export function AiFlightSurgeonChat({
               </span>
               <span>
                 {msg.engineSource === 'SMOLLM2_360M_ON_DEVICE'
-                  ? 'Experimental text helper'
+                  ? 'On-device AI + Rule-based check'
                   : 'Rule-based explanation'}{' '}
                 • {msg.timestampLabel}
               </span>
@@ -656,7 +623,7 @@ export function AiFlightSurgeonChat({
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder='Describe symptoms (e.g. "My head is pounding and vision is blurry") or ask "What does HRV or ROS mean?"...'
+          placeholder='Describe symptoms (e.g. "I have a stomach ache" or "My head is pounding") or ask "What does HRV or ROS mean?"...'
           className="flex-1 min-h-[44px] bg-space-void border border-space-border focus:border-accent-cyan rounded-lg px-3.5 py-2 text-xs text-cockpit-primary placeholder:text-cockpit-muted outline-none font-sans"
         />
         <button

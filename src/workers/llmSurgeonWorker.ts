@@ -14,6 +14,24 @@ function postWorkerMessage(msg: LlmWorkerResponse) {
   self.postMessage(msg);
 }
 
+// Removes repeated sentences if a small quantized model echoes a clause
+function deduplicateSentences(rawText: string): string {
+  const sentences = rawText
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const s of sentences) {
+    const key = s.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(s);
+    }
+  }
+  return unique.join(' ').trim();
+}
+
 // Surface any unexpected worker-level error or unhandled rejection immediately to the UI
 self.addEventListener('error', (event) => {
   postWorkerMessage({
@@ -227,36 +245,20 @@ self.addEventListener('message', async (event: MessageEvent<LlmWorkerRequest>) =
   if (payload.type === 'GENERATE_RESPONSE') {
     try {
       const generator = await ensureModelLoaded(DEFAULT_MODEL_ID);
-      const { TextStreamer } = await import('@huggingface/transformers');
 
       const messages = [
         { role: 'system', content: payload.systemPrompt },
         { role: 'user', content: payload.userMessage },
       ];
 
-      let streamedText = '';
-      const streamer = new TextStreamer(generator.tokenizer, {
-        skip_prompt: true,
-        skip_special_tokens: true,
-        callback_function: (tokenText: string) => {
-          streamedText += tokenText;
-          const cleaned = streamedText.trimStart();
-          if (cleaned) {
-            postWorkerMessage({
-              type: 'GENERATION_STREAM',
-              requestId: payload.requestId,
-              partialText: cleaned,
-            });
-          }
-        },
-      });
-
+      // Compute full response in a single pass (no token-by-token UI streaming lag)
+      // with repetition_penalty and no_repeat_ngram_size to prevent phrase loops.
       const output = await generator(messages, {
-        max_new_tokens: 120,
-        temperature: 0.2,
+        max_new_tokens: 80,
         do_sample: false,
+        repetition_penalty: 1.25,
+        no_repeat_ngram_size: 3,
         return_full_text: false,
-        streamer,
       });
 
       const firstItem = Array.isArray(output) ? output[0] : output;
@@ -273,15 +275,15 @@ self.addEventListener('message', async (event: MessageEvent<LlmWorkerRequest>) =
       } else if (Array.isArray(generated) && generated.length > 0) {
         const lastMsg = generated[generated.length - 1] as { content?: string };
         replyText = (lastMsg?.content ?? '').trim();
-      } else if (streamedText.trim()) {
-        replyText = streamedText.trim();
       }
+
+      const cleanedReply = deduplicateSentences(replyText);
 
       postWorkerMessage({
         type: 'GENERATION_COMPLETE',
         requestId: payload.requestId,
         replyText:
-          replyText ||
+          cleanedReply ||
           'Telemetry evaluated. Follow the verified NASA ExMC checklist steps displayed in the Flight Surgeon panel.',
       });
     } catch (err) {

@@ -43,11 +43,6 @@ export type LlmWorkerResponse =
       deviceUsed: 'webgpu' | 'wasm';
     }
   | {
-      type: 'GENERATION_STREAM';
-      requestId: string;
-      partialText: string;
-    }
-  | {
       type: 'GENERATION_COMPLETE';
       requestId: string;
       replyText: string;
