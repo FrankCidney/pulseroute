@@ -96,6 +96,16 @@ export function AiFlightSurgeonChat({
   });
 
   const workerRef = useRef<Worker | null>(null);
+  const pendingFallbacksRef = useRef<
+    Map<
+      string,
+      {
+        title: string;
+        content: string;
+        symptomAlerts?: readonly string[];
+      }
+    >
+  >(new Map());
   const latestCtxRef = useRef<NarratorContext>(narratorCtx);
   latestCtxRef.current = narratorCtx;
 
@@ -145,16 +155,18 @@ export function AiFlightSurgeonChat({
       if (msg.type === 'MODEL_PROGRESS') {
         setNeuralModelStatus('LOADING');
         setNeuralProgressPct(msg.progressPct);
-        setNeuralStatusText('Preparing optional text helper…');
+        setNeuralStatusText(msg.statusText);
       } else if (msg.type === 'MODEL_READY') {
         setNeuralModelStatus('READY');
         setNeuralProgressPct(100);
         setNeuralStatusText(
-          'Experimental text helper ready on this device'
+          `Experimental on-device model ready (${msg.deviceUsed.toUpperCase()})`
         );
         setEngineMode('NEURAL_WEB_LLM');
       } else if (msg.type === 'GENERATION_COMPLETE') {
         setIsGenerating(false);
+        const fallback = pendingFallbacksRef.current.get(msg.requestId);
+        pendingFallbacksRef.current.delete(msg.requestId);
         setMessages((prev) => [
           ...prev,
           {
@@ -164,6 +176,7 @@ export function AiFlightSurgeonChat({
             engineSource: 'SMOLLM2_360M_ON_DEVICE',
             title: `Experimental text helper (${latestCtxRef.current.crew.name})`,
             content: msg.replyText,
+            symptomAlerts: fallback?.symptomAlerts,
           },
         ]);
       } else if (msg.type === 'WORKER_ERROR') {
@@ -171,12 +184,66 @@ export function AiFlightSurgeonChat({
         setNeuralModelStatus('ERROR');
         setEngineMode('INSTANT_NARRATOR');
         setNeuralStatusText(msg.errorMessage);
+        if (msg.requestId) {
+          const fallback = pendingFallbacksRef.current.get(msg.requestId);
+          pendingFallbacksRef.current.delete(msg.requestId);
+          if (fallback) {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: `a-fallback-${msg.requestId}`,
+                role: 'assistant',
+                timestampLabel: new Date().toLocaleTimeString(),
+                engineSource: 'DETERMINISTIC_NARRATOR',
+                title: fallback.title,
+                content: fallback.content,
+                symptomAlerts: fallback.symptomAlerts,
+              },
+            ]);
+          }
+        }
       }
+    };
+
+    worker.onerror = (errEvent) => {
+      errEvent.preventDefault();
+      if (workerRef.current) {
+        workerRef.current.terminate();
+        workerRef.current = null;
+      }
+      setIsGenerating(false);
+      setNeuralModelStatus('ERROR');
+      setEngineMode('INSTANT_NARRATOR');
+      setNeuralStatusText(
+        errEvent.message ||
+          'Background AI worker failed to initialize. Rule-based replies remain active.'
+      );
+    };
+
+    worker.onmessageerror = () => {
+      setIsGenerating(false);
+      setNeuralModelStatus('ERROR');
+      setEngineMode('INSTANT_NARRATOR');
+      setNeuralStatusText(
+        'Worker communication error. Rule-based replies remain active.'
+      );
     };
 
     workerRef.current = worker;
     return worker;
   }, []);
+
+  const handleCancelNeuralLoad = () => {
+    if (workerRef.current) {
+      workerRef.current.terminate();
+      workerRef.current = null;
+    }
+    setIsGenerating(false);
+    setNeuralModelStatus('UNLOADED');
+    setNeuralProgressPct(0);
+    setEngineMode('INSTANT_NARRATOR');
+    setNeuralStatusText('Optional experimental text helper');
+  };
 
   const handleActivateNeuralLlm = () => {
     if (neuralModelStatus === 'READY') {
@@ -185,12 +252,17 @@ export function AiFlightSurgeonChat({
       );
       return;
     }
+    if (neuralModelStatus === 'ERROR' && workerRef.current) {
+      workerRef.current.terminate();
+      workerRef.current = null;
+    }
     const worker = ensureWorkerInitialized();
     setNeuralModelStatus('LOADING');
     setNeuralProgressPct(5);
+    setNeuralStatusText('Starting background AI worker...');
     const req: LlmWorkerRequest = {
       type: 'LOAD_MODEL',
-      modelId: 'HuggingFaceTB/SmolLM2-360M-Instruct',
+      modelId: 'HuggingFaceTB/SmolLM2-135M-Instruct',
     };
     worker.postMessage(req);
   };
@@ -204,12 +276,16 @@ export function AiFlightSurgeonChat({
       content: label,
     };
 
+    const answer = answerQuickPromptInPlainEnglish(intent, narratorCtx);
+
     if (engineMode === 'NEURAL_WEB_LLM' && neuralModelStatus === 'READY' && workerRef.current) {
+      const requestId = String(Date.now());
+      pendingFallbacksRef.current.set(requestId, answer);
       setMessages((prev) => [...prev, userMsg]);
       setIsGenerating(true);
       const req: LlmWorkerRequest = {
         type: 'GENERATE_RESPONSE',
-        requestId: String(Date.now()),
+        requestId,
         systemPrompt: buildGroundTruthSystemPrompt(narratorCtx),
         userMessage: label,
       };
@@ -217,7 +293,6 @@ export function AiFlightSurgeonChat({
       return;
     }
 
-    const answer = answerQuickPromptInPlainEnglish(intent, narratorCtx);
     const replyMsg: AiChatMessage = {
       id: `a-${Date.now()}`,
       role: 'assistant',
@@ -251,11 +326,13 @@ export function AiFlightSurgeonChat({
     );
 
     if (engineMode === 'NEURAL_WEB_LLM' && neuralModelStatus === 'READY' && workerRef.current) {
+      const requestId = String(Date.now());
+      pendingFallbacksRef.current.set(requestId, deterministicResult);
       setMessages((prev) => [...prev, userMsg]);
       setIsGenerating(true);
       const req: LlmWorkerRequest = {
         type: 'GENERATE_RESPONSE',
-        requestId: String(Date.now()),
+        requestId,
         systemPrompt: buildGroundTruthSystemPrompt(narratorCtx),
         userMessage: trimmed,
       };
@@ -323,7 +400,9 @@ export function AiFlightSurgeonChat({
                   : 'TRY OPTIONAL ON-DEVICE AI'
                 : neuralModelStatus === 'LOADING'
                   ? `PREPARING AI MODEL (${neuralProgressPct}%)`
-                  : 'TRY OPTIONAL ON-DEVICE AI'}
+                  : neuralModelStatus === 'ERROR'
+                    ? 'RETRY ON-DEVICE AI'
+                    : 'TRY OPTIONAL ON-DEVICE AI'}
             </span>
           </button>
         </div>
@@ -332,9 +411,18 @@ export function AiFlightSurgeonChat({
       {/* Neural Model Download/Cache Progress Bar (when loading) */}
       {neuralModelStatus === 'LOADING' ? (
         <div className="bg-space-void border border-accent-cyan/30 rounded-lg p-2.5 space-y-1.5">
-          <div className="flex items-center justify-between text-[11px] font-mono">
-            <span className="text-accent-cyan">{neuralStatusText}</span>
-            <span className="text-cockpit-primary font-bold">{neuralProgressPct}%</span>
+          <div className="flex items-center justify-between gap-2 text-[11px] font-mono">
+            <span className="text-accent-cyan truncate">{neuralStatusText}</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-cockpit-primary font-bold">{neuralProgressPct}%</span>
+              <button
+                type="button"
+                onClick={handleCancelNeuralLoad}
+                className="px-2 py-0.5 rounded bg-space-elevated hover:bg-space-border border border-space-border text-[10px] text-cockpit-muted hover:text-cockpit-primary transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
           <div className="w-full h-2 bg-space-elevated rounded-full overflow-hidden">
             <div
@@ -342,6 +430,23 @@ export function AiFlightSurgeonChat({
               style={{ width: `${neuralProgressPct}%` }}
             />
           </div>
+        </div>
+      ) : null}
+
+      {/* Error Banner if On-Device Model Load Fails */}
+      {neuralModelStatus === 'ERROR' ? (
+        <div className="bg-status-warning/10 border border-status-warning/40 rounded-lg p-2.5 flex items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2 text-status-warning">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>{neuralStatusText}</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleCancelNeuralLoad}
+            className="px-2 py-1 rounded bg-space-void hover:bg-space-elevated border border-space-border text-[10px] font-mono text-cockpit-muted shrink-0"
+          >
+            Dismiss
+          </button>
         </div>
       ) : null}
 
