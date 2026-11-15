@@ -5,6 +5,9 @@ import { VitePWA } from 'vite-plugin-pwa';
 // Configure Vite with offline-first PWA service worker support so AURA
 // operates with zero network dependency aboard spacecraft or remote clinics.
 export default defineConfig({
+  worker: {
+    format: 'es',
+  },
   plugins: [
     react(),
     VitePWA({

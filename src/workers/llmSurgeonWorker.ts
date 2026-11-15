@@ -1,4 +1,8 @@
-import type { TextGenerationPipeline } from '@huggingface/transformers';
+import {
+  pipeline,
+  env,
+  type TextGenerationPipeline,
+} from '@huggingface/transformers';
 import ortWasmUrl from '../../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.asyncify.wasm?url';
 import type { LlmWorkerRequest, LlmWorkerResponse } from '../types/aiSurgeon';
 
@@ -70,8 +74,6 @@ async function ensureModelLoaded(
         statusText: 'Loading local ONNX WebAssembly runtime...',
         progressPct: 10,
       });
-
-      const { pipeline, env } = await import('@huggingface/transformers');
 
       // Allow browser Cache API storage so once model weights are downloaded,
       // subsequent sessions load from local cache with zero network requests.
