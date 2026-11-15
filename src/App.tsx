@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Shield, Bot, ArrowRight } from 'lucide-react';
+import { ArrowRight, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { TopHudBar } from './components/layout/TopHudBar';
-import { generatePlainEnglishOverviewBriefing } from './engine/flightSurgeonNarrator';
 import { PageNav } from './components/layout/PageNav';
 import { CrewRoster } from './components/crew/CrewRoster';
 import { VitalsGrid } from './components/telemetry/VitalsGrid';
@@ -13,15 +12,14 @@ import {
 } from './components/environment/MolecularCountermeasurePanel';
 import { FlightSurgeonPanel } from './components/doctor/FlightSurgeonPanel';
 import { GuidedSelfAssessmentWizard } from './components/doctor/GuidedSelfAssessmentWizard';
-import { OpticalScannerModal } from './components/doctor/OpticalScannerModal';
-import { AiFlightSurgeonChat } from './components/doctor/AiFlightSurgeonChat';
 import { ScenarioBar } from './components/scenarios/ScenarioBar';
 import { NasaAttributionModal } from './components/scenarios/NasaAttributionModal';
 import { useAuraCockpit } from './hooks/useAuraCockpit';
+import { getScenarioPresetById, type ScenarioId } from './services/scenarioPresets';
 import type { CrewMember, CrewId, OperationalMode } from './types/crew';
 import type { CrewTelemetryStream } from './types/telemetry';
 import type { ClinicalDiagnosisVerdict } from './types/diagnosis';
-import type { EclssEnvironment, MolecularCountermeasureAssessment } from './types/environment';
+import type { EclssEnvironment } from './types/environment';
 
 type PageId = 'overview' | 'telemetry' | 'environment' | 'medical' | 'crew';
 
@@ -34,8 +32,6 @@ export function App() {
     selectedCrewId,
     setSelectedCrewId,
     snapshot,
-    missionElapsedSeconds,
-    earthDistanceMillionMiles,
     oneWayCommsDelaySeconds,
     completedStepIds,
     handleToggleChecklistStep,
@@ -57,7 +53,7 @@ export function App() {
   const selectedVerdict = snapshot.verdictsByCrewId[selectedCrew.id];
 
   const activeEmergencyCount = snapshot.crewRoster.filter(
-    (c) => c.status === 'CRITICAL'
+    (c) => c.status !== 'NOMINAL'
   ).length;
 
   const molecularAssessment = evaluateMolecularCountermeasures({
@@ -82,15 +78,12 @@ export function App() {
         <TopHudBar
           operationalMode={operationalMode}
           onToggleOperationalMode={setOperationalMode}
-          missionElapsedSeconds={missionElapsedSeconds}
-          earthDistanceMillionMiles={earthDistanceMillionMiles}
           oneWayCommsDelaySeconds={oneWayCommsDelaySeconds}
           queuedBurstCount={queuedBursts.length}
           onQueueBurstTransmission={() => {
             void handleQueueBurstTransmission();
           }}
           onOpenNasaAttribution={() => setIsNasaModalOpen(true)}
-          activeEmergencyCount={activeEmergencyCount}
         />
 
         <div className="border-b border-space-border bg-space-hull/60 px-4 py-2">
@@ -104,6 +97,9 @@ export function App() {
         </div>
 
         <main className="flex-1 max-w-[1600px] w-full mx-auto p-3 flex flex-col gap-3">
+          <div className="rounded-lg border border-status-warning/40 bg-status-warning/5 px-4 py-3 text-sm text-cockpit-primary">
+            <strong>Prototype demo:</strong> All readings are simulated. This version does not connect to medical devices and is not clinical guidance.
+          </div>
           {activePage === 'overview' && (
             <OverviewPage
               crewMembers={snapshot.crewRoster}
@@ -111,7 +107,6 @@ export function App() {
               selectedStream={selectedStream}
               selectedVerdict={selectedVerdict}
               environment={snapshot.environment}
-              molecularAssessment={molecularAssessment}
               operationalMode={operationalMode}
               activeScenarioId={activeScenarioId}
               activeEmergencyCount={activeEmergencyCount}
@@ -153,25 +148,11 @@ export function App() {
                 onToggleChecklistStep={handleToggleChecklistStep}
                 onOpenSelfAssessmentWizard={() => setIsWizardOpen(true)}
               />
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
-                <div className="lg:col-span-7">
-                  <AiFlightSurgeonChat
-                    crew={selectedCrew}
-                    vitals={selectedStream.latestVitals}
-                    environment={snapshot.environment}
-                    verdict={selectedVerdict}
-                    molecular={molecularAssessment}
-                  />
-                </div>
-                <div className="lg:col-span-5">
-                  <OpticalScannerModal
-                    crewName={selectedCrew.name}
-                    fluidShift={selectedStream.latestVitals.fluidShift}
-                    radiationRateMsvHr={
-                      selectedStream.latestVitals.personalRadiationRateMsvHr
-                    }
-                  />
-                </div>
+              <div className="rounded-lg border border-space-border bg-space-hull p-4 text-sm leading-relaxed text-cockpit-muted">
+                <h2 className="font-semibold text-cockpit-primary">About this demonstration</h2>
+                <p className="mt-1">
+                  Alerts are generated from sample scenarios and fixed prototype rules. The checklist shows a review workflow only; it does not provide medical advice or replace approved mission procedures.
+                </p>
               </div>
             </div>
           )}
@@ -189,14 +170,14 @@ export function App() {
           <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-3">
               <span>
-                AURA DETERMINISTIC CLINICAL CORE • NASA ExMC ICL 1.0 &amp; OSDR (OSD-574 / OSD-379)
+                AURA · Astronaut health monitoring prototype
               </span>
               {lastBurstToast && (
                 <span className="text-accent-cyan">{lastBurstToast}</span>
               )}
             </div>
-            <span className="text-status-nominal">
-              INDEXEDDB (DEXIE) STORE-AND-FORWARD ACTIVE • 0% AI HALLUCINATION RISK
+            <span className="text-cockpit-muted">
+              Demonstration only · simulated readings · not medical advice
             </span>
           </div>
         </footer>
@@ -227,9 +208,8 @@ interface OverviewPageProps {
   selectedStream: CrewTelemetryStream;
   selectedVerdict: ClinicalDiagnosisVerdict;
   environment: EclssEnvironment;
-  molecularAssessment: MolecularCountermeasureAssessment;
   operationalMode: OperationalMode;
-  activeScenarioId: string;
+  activeScenarioId: ScenarioId;
   activeEmergencyCount: number;
   onSelectCrew: (crewId: CrewId) => void;
   onOpenMedicalTab: () => void;
@@ -241,7 +221,6 @@ function OverviewPage({
   selectedStream,
   selectedVerdict,
   environment,
-  molecularAssessment,
   operationalMode,
   activeScenarioId,
   activeEmergencyCount,
@@ -249,17 +228,25 @@ function OverviewPage({
   onOpenMedicalTab,
 }: OverviewPageProps) {
   const { latestVitals } = selectedStream;
-  const plainBriefing = generatePlainEnglishOverviewBriefing({
-    crew: selectedCrew,
-    vitals: latestVitals,
-    environment,
-    verdict: selectedVerdict,
-    molecular: molecularAssessment,
-  });
+  const activeScenario = getScenarioPresetById(activeScenarioId);
+  const hasAlert = selectedVerdict.primaryConditionId !== 'NOMINAL_STATE';
+  const environmentStatus =
+    environment.overallStatus === 'CRITICAL'
+      ? 'Attention'
+      : environment.overallStatus === 'WARNING'
+        ? 'Review'
+        : 'In range';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-      {/* Left column: crew roster + environment mini */}
+      <header className="lg:col-span-12">
+        <p className="text-sm font-semibold text-accent-cyan">OVERVIEW</p>
+        <h2 className="mt-1 text-2xl font-bold text-cockpit-primary">Crew health at a glance</h2>
+        <p className="mt-1 text-sm text-cockpit-muted">
+          Review the sample readings, alert, and response steps for this scenario.
+        </p>
+      </header>
+
       <div className="lg:col-span-4 flex flex-col gap-3">
         <CrewRoster
           crewMembers={crewMembers}
@@ -267,13 +254,13 @@ function OverviewPage({
           onSelectCrew={onSelectCrew}
           operationalMode={operationalMode}
         />
-        <div className="bg-space-hull border border-space-border rounded-xl p-3 flex flex-col gap-2">
-          <div className="flex items-center justify-between border-b border-space-border pb-1.5">
-            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-cockpit-primary">
-              CABIN ENVIRONMENT
+        <div className="bg-space-hull border border-space-border rounded-xl p-4 flex flex-col gap-2">
+          <div className="flex items-center justify-between border-b border-space-border pb-2">
+            <h2 className="text-base font-semibold text-cockpit-primary">
+              Spacecraft environment
             </h2>
             <span
-              className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${
+              className={`text-xs font-semibold px-2 py-1 rounded border ${
                 environment.overallStatus === 'CRITICAL'
                   ? 'bg-status-critical/20 text-status-critical border-status-critical'
                   : environment.overallStatus === 'WARNING'
@@ -281,183 +268,76 @@ function OverviewPage({
                     : 'bg-status-nominal/15 text-status-nominal border-status-nominal/30'
               }`}
             >
-              {environment.overallStatus}
+              {environmentStatus}
             </span>
           </div>
           <CabinAtmosphere environment={environment} operationalMode={operationalMode} />
         </div>
       </div>
 
-      {/* Right column: vitals summary + status */}
       <div className="lg:col-span-8 flex flex-col gap-3">
-        <div className="bg-space-hull border border-space-border rounded-xl p-3 flex flex-col gap-3">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-space-border pb-2">
-            <div className="flex items-center gap-2.5">
-              <div className="flex items-center gap-2">
-                <div className="h-4 w-4 rounded-lg flex items-center justify-center border border-accent-cyan/40 text-accent-cyan">
-                  <Shield className="h-3 w-3" />
-                </div>
-                <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-cockpit-primary">
-                  MISSION STATUS
-                </h2>
-              </div>
-              <span
-                className={`text-[11px] font-mono text-cockpit-muted`}
-              >
-                SCENARIO {activeScenarioId.replace(/_/g, ' ')}
-              </span>
+        <section className="bg-space-hull border border-space-border rounded-xl p-5 flex flex-col gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-space-border pb-3">
+            <div>
+              <p className="text-sm text-cockpit-muted">{activeEmergencyCount} of {crewMembers.length} crew members need attention in this demo</p>
+              <h2 className="mt-1 text-xl font-bold text-cockpit-primary">{selectedCrew.name}</h2>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <div
-              className={`bg-space-void/90 border rounded-lg p-2.5 flex flex-col justify-between gap-1.5 ${
-                activeEmergencyCount > 0
-                  ? 'border-status-critical'
-                  : 'border-space-border'
-              }`}
-            >
-              <div className="flex items-center justify-between text-[10px] font-mono text-cockpit-muted">
-                <span>ACTIVE EMERGENCIES</span>
-                <span>{activeEmergencyCount}</span>
-              </div>
-              <div className="font-mono tabular-nums flex items-baseline gap-1">
-                <span className={`text-xl font-bold ${
-                  activeEmergencyCount > 0 ? 'text-status-critical' : 'text-status-nominal'
-                }`}>
-                  {activeEmergencyCount}
-                </span>
-              </div>
-            </div>
-
-            <div className="bg-space-void/90 border border-space-border rounded-lg p-2.5 flex flex-col justify-between gap-1.5">
-              <div className="flex items-center justify-between text-[10px] font-mono text-cockpit-muted">
-                <span>GENOMIC RISK</span>
-                <span>{molecularAssessment.genomicRiskLevel}</span>
-              </div>
-              <div className="font-mono tabular-nums flex items-baseline gap-1">
-                <span className="text-xl font-bold text-cockpit-primary">
-                  {molecularAssessment.oxidativeStressIndexPct}%
-                </span>
-                <span className="text-[11px] text-cockpit-muted">ROS STRESS</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-space-void/90 border border-space-border rounded-lg p-2.5 flex flex-col gap-2">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-cockpit-muted block">
-              PRIMARY DIAGNOSIS
+            <span className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold ${
+              hasAlert
+                ? 'border-status-warning/40 bg-status-warning/10 text-status-warning'
+                : 'border-status-nominal/30 bg-status-nominal/10 text-status-nominal'
+            }`}>
+              {hasAlert ? <AlertTriangle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+              {hasAlert ? 'Review this alert' : 'No demo alert'}
             </span>
-            <h3 className="text-sm font-bold text-cockpit-primary">
-              {selectedVerdict.title}
+          </div>
+
+          <div>
+            <h3 className="text-base font-semibold text-cockpit-primary">
+              {hasAlert ? selectedVerdict.title : 'Readings within the demo baseline'}
             </h3>
-            <p className="text-xs text-cockpit-muted">{selectedVerdict.primaryCauseText}</p>
-            <div className="flex items-center gap-1.5 text-xs font-mono pt-1 border-t border-space-border/60">
-              <span className="text-cockpit-muted">TIME TO IMPAIRMENT:</span>
-              <span className="text-cockpit-primary font-semibold">
-                {selectedVerdict.timeToImpairmentText}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-space-hull border border-space-border rounded-xl p-3 flex flex-col gap-3 h-full">
-          <div className="flex items-center justify-between border-b border-space-border pb-2">
-            <div className="flex items-center gap-2.5">
-              <div className="h-4 w-4 rounded-lg flex items-center justify-center border border-accent-cyan/40 text-accent-cyan">
-                <Shield className="h-3 w-3" />
-              </div>
-              <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-cockpit-primary">
-                KEY VITALS — {selectedCrew.name.toUpperCase()}
-              </h2>
-            </div>
+            <p className="mt-1 text-sm leading-relaxed text-cockpit-muted">
+              {hasAlert
+                ? activeScenario.subtitle
+                : 'Sample crew readings and cabin conditions are within this scenario’s demo ranges.'}
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <div className="bg-space-void/90 border border-space-border rounded-lg p-2.5 flex flex-col gap-1">
-              <div className="flex items-center justify-between text-[10px] font-mono text-cockpit-muted">
-                <span>HEART RATE</span>
-                <span>BPM</span>
+          <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+            {[
+              { label: 'Heart rate', value: `${latestVitals.heartRateBpm}`, unit: 'beats/min' },
+              { label: 'Blood oxygen', value: latestVitals.spO2Pct.toFixed(1), unit: '%' },
+              { label: 'Breathing rate', value: `${latestVitals.respirationRateBrPm}`, unit: 'breaths/min' },
+              { label: 'Fatigue estimate', value: `${latestVitals.cognitiveFatigue.fatigueIndexPct}`, unit: '%' },
+            ].map((reading) => (
+              <div key={reading.label} className="rounded-lg border border-space-border bg-space-void p-3">
+                <p className="text-sm text-cockpit-muted">{reading.label}</p>
+                <p className="mt-1 text-xl font-bold tabular-nums text-cockpit-primary">
+                  {reading.value} <span className="text-xs font-medium text-cockpit-muted">{reading.unit}</span>
+                </p>
               </div>
-              <div className="font-mono tabular-nums flex items-baseline gap-1">
-                <span className="text-xl font-bold text-cockpit-primary">
-                  {latestVitals.heartRateBpm}
-                </span>
-              </div>
-            </div>
-            <div className="bg-space-void/90 border border-space-border rounded-lg p-2.5 flex flex-col gap-1">
-              <div className="flex items-center justify-between text-[10px] font-mono text-cockpit-muted">
-                <span>BLOOD OXYGEN</span>
-                <span>%</span>
-              </div>
-              <div className="font-mono tabular-nums flex items-baseline gap-1">
-                <span className="text-xl font-bold text-cockpit-primary">
-                  {latestVitals.spO2Pct.toFixed(1)}
-                </span>
-              </div>
-            </div>
-            <div className="bg-space-void/90 border border-space-border rounded-lg p-2.5 flex flex-col gap-1">
-              <div className="flex items-center justify-between text-[10px] font-mono text-cockpit-muted">
-                <span>HRV RMSSD</span>
-                <span>ms</span>
-              </div>
-              <div className="font-mono tabular-nums flex items-baseline gap-1">
-                <span className="text-xl font-bold text-cockpit-primary">
-                  {latestVitals.hrvRmssdMs}
-                </span>
-              </div>
-            </div>
-            <div className="bg-space-void/90 border border-space-border rounded-lg p-2.5 flex flex-col gap-1">
-              <div className="flex items-center justify-between text-[10px] font-mono text-cockpit-muted">
-                <span>CORE TEMP</span>
-                <span>°C</span>
-              </div>
-              <div className="font-mono tabular-nums flex items-baseline gap-1">
-                <span className="text-xl font-bold text-cockpit-primary">
-                  {latestVitals.coreTempCelsius.toFixed(1)}
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
-        </div>
 
-        {/* Plain-English AI Flight Surgeon Live Briefing Card */}
-        <div className="bg-space-hull border border-accent-cyan/40 rounded-xl p-3.5 flex flex-col gap-2.5">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-space-border pb-2">
-            <div className="flex items-center gap-2">
-              <Bot className="h-4 w-4 text-accent-cyan" />
-              <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-cockpit-primary">
-                PLAIN-ENGLISH AI FLIGHT SURGEON BRIEFING — {selectedCrew.name.toUpperCase()}
-              </h2>
-            </div>
+          <div className="rounded-lg border border-accent-cyan/30 bg-accent-cyan/5 p-4">
+            <h3 className="text-sm font-semibold text-cockpit-primary">
+              {hasAlert ? 'Explore the example response' : 'Try another demo situation'}
+            </h3>
+            <p className="mt-1 text-sm leading-relaxed text-cockpit-muted">
+              {hasAlert
+                ? 'Review the response checklist for this scenario. These example steps are not medical guidance.'
+                : 'Choose a different situation above to see how the prototype presents an alert and response steps.'}
+            </p>
             <button
               type="button"
               onClick={onOpenMedicalTab}
-              className="px-3 py-1 rounded-md bg-accent-cyan/15 hover:bg-accent-cyan/25 border border-accent-cyan/40 text-xs font-mono font-semibold text-accent-cyan flex items-center gap-1.5 transition-colors"
+              className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-md bg-accent-cyan px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-cyan/90"
             >
-              <span>ASK AI SURGEON / VIEW CHECKLIST</span>
-              <ArrowRight className="h-3.5 w-3.5" />
+              Review response steps
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
-
-          <p className="text-xs font-semibold text-cockpit-primary">
-            {plainBriefing.headline}
-          </p>
-          <ul className="space-y-1 text-xs text-cockpit-muted leading-relaxed">
-            <li>
-              <strong className="text-cockpit-primary">Body Vitals:</strong>{' '}
-              {plainBriefing.bodyExplanation}
-            </li>
-            <li>
-              <strong className="text-cockpit-primary">Spaceship Room Air:</strong>{' '}
-              {plainBriefing.roomExplanation}
-            </li>
-            <li>
-              <strong className="text-accent-cyan">What To Do Now:</strong>{' '}
-              {plainBriefing.actionExplanation}
-            </li>
-          </ul>
-        </div>
+        </section>
       </div>
     </div>
   );

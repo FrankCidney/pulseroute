@@ -11,12 +11,12 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'AURA — Autonomous Digital Flight Surgeon',
-        short_name: 'AURA HUD',
+        name: 'AURA — Astronaut Health Monitor',
+        short_name: 'AURA Health',
         description:
-          'Offline-first autonomous clinical cockpit and multi-sensor fusion monitor for deep-space missions and remote clinics.',
-        theme_color: '#080B10',
-        background_color: '#080B10',
+          'A prototype concept for astronaut health monitoring during long-duration space missions.',
+        theme_color: '#F3F6F7',
+        background_color: '#F3F6F7',
         display: 'standalone',
         orientation: 'landscape',
         icons: [

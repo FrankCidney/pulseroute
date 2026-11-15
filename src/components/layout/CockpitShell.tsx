@@ -61,11 +61,11 @@ export function CockpitShell({
       <footer className="border-t border-space-border bg-space-hull px-4 py-2.5 text-xs font-mono text-cockpit-muted">
         <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-2">
           <span>
-            AURA DETERMINISTIC CLINICAL CORE • NASA ExMC ICL 1.0 &amp; OSDR (OSD-574 / OSD-379)
+            AURA • Astronaut health monitoring prototype
           </span>
           {footerStatusSlot ?? (
             <span className="text-status-nominal">
-              INDEXEDDB (DEXIE) STORE-AND-FORWARD ACTIVE • 0% AI HALLUCINATION RISK
+              Demonstration only • simulated readings • not medical advice
             </span>
           )}
         </div>

@@ -123,8 +123,8 @@ export function LiveEcgWaveform({
             <AreaChart data={chartData} margin={{ top: 6, right: 6, left: -24, bottom: 2 }}>
               <defs>
                 <linearGradient id="ppgCyanFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.35} />
-                  <stop offset="95%" stopColor="#06B6D4" stopOpacity={0.02} />
+                  <stop offset="5%" stopColor="#26727A" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="#26727A" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <YAxis domain={[0, 110]} tick={{ fontSize: 10, fill: '#64748B' }} />
@@ -140,7 +140,7 @@ export function LiveEcgWaveform({
               <Area
                 type="monotone"
                 dataKey="ppgWave"
-                stroke="#06B6D4"
+                stroke="#26727A"
                 strokeWidth={1.75}
                 fill="url(#ppgCyanFill)"
                 isAnimationActive={false}

@@ -7,12 +7,7 @@ export interface CabinAtmosphereProps {
   operationalMode: OperationalMode;
 }
 
-export function CabinAtmosphere({
-  environment,
-  operationalMode,
-}: CabinAtmosphereProps) {
-  const isMarsMode = operationalMode === 'MARS_TRANSIT';
-
+export function CabinAtmosphere({ environment }: CabinAtmosphereProps) {
   const pressureCrit = environment.cabinPressurePsi < 12.2;
   const pressureWarn = environment.cabinPressurePsi < 13.8 && !pressureCrit;
 
@@ -37,9 +32,9 @@ export function CabinAtmosphere({
         <div className="flex items-center justify-between text-[10px] font-mono text-cockpit-muted">
           <span className="flex items-center gap-1">
             <Gauge className="h-3.5 w-3.5 text-accent-cyan" />
-            {isMarsMode ? 'CABIN PRESSURE' : 'BAROMETRIC'}
+            Air pressure
           </span>
-          <span>14.7 NOM</span>
+          <span>Typical: 14.7</span>
         </div>
         <div className="font-mono tabular-nums flex items-baseline gap-1">
           <span
@@ -70,9 +65,9 @@ export function CabinAtmosphere({
         <div className="flex items-center justify-between text-[10px] font-mono text-cockpit-muted">
           <span className="flex items-center gap-1">
             <Wind className="h-3.5 w-3.5 text-accent-cyan" />
-            {isMarsMode ? 'CABIN pCO2' : 'AMBIENT CO2'}
+            Carbon dioxide
           </span>
-          <span>{environment.cabinCo2MmHg.toFixed(1)} mmHg</span>
+          <span>Cabin air</span>
         </div>
         <div className="font-mono tabular-nums flex items-baseline gap-1">
           <span
@@ -103,9 +98,9 @@ export function CabinAtmosphere({
         <div className="flex items-center justify-between text-[10px] font-mono text-cockpit-muted">
           <span className="flex items-center gap-1">
             <Droplets className="h-3.5 w-3.5 text-accent-cyan" />
-            {isMarsMode ? 'CABIN pO2' : 'ROOM O2'}
+            Oxygen
           </span>
-          <span>21.0% NOM</span>
+          <span>Typical: 21%</span>
         </div>
         <div className="font-mono tabular-nums flex items-baseline gap-1">
           <span
@@ -128,7 +123,7 @@ export function CabinAtmosphere({
         <div className="flex items-center justify-between text-[10px] font-mono text-cockpit-muted">
           <span className="flex items-center gap-1">
             <Thermometer className="h-3.5 w-3.5 text-accent-cyan" />
-            TEMP / RH
+            Temperature
           </span>
           <span>{environment.relativeHumidityPct}% RH</span>
         </div>

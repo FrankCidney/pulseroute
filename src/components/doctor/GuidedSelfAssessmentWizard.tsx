@@ -154,10 +154,10 @@ export function GuidedSelfAssessmentWizard({
             <Stethoscope className="h-5 w-5 text-accent-cyan" />
             <div>
               <h2 className="text-sm font-mono font-bold uppercase tracking-wider text-cockpit-primary">
-                GUIDED SELF-ASSESSMENT WIZARD (NON-PHYSICIAN CMO PROTOCOL)
+                Guided self-check
               </h2>
               <p className="text-xs font-mono text-cockpit-muted">
-                SUBJECT: {crewName.toUpperCase()} • STEP-BY-STEP VISUAL DIAGNOSTIC GUIDE
+                For {crewName} · practice scenario only, not a medical assessment
               </p>
             </div>
           </div>
@@ -285,7 +285,7 @@ export function GuidedSelfAssessmentWizard({
                 setStepIndex((i) => Math.min(activeProc.steps.length - 1, i + 1));
                 setRecordedFinding(null);
               }}
-              className="min-h-[48px] px-4 py-2 rounded-lg bg-accent-cyan text-space-void font-mono font-bold text-xs flex items-center gap-1.5"
+              className="min-h-[48px] px-4 py-2 rounded-lg bg-accent-cyan text-white font-semibold text-sm flex items-center gap-1.5"
             >
               <span>NEXT STEP</span>
               <ChevronRight className="h-4 w-4" />
@@ -294,7 +294,7 @@ export function GuidedSelfAssessmentWizard({
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[48px] px-4 py-2 rounded-lg bg-status-nominal text-space-void font-mono font-bold text-xs flex items-center gap-1.5"
+              className="min-h-[48px] px-4 py-2 rounded-lg bg-status-nominal text-white font-semibold text-sm flex items-center gap-1.5"
             >
               <ClipboardCheck className="h-4 w-4" />
               <span>COMPLETE SELF-ASSESSMENT</span>

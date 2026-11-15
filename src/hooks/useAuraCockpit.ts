@@ -166,7 +166,7 @@ export function useAuraCockpit() {
 
     await refreshOfflineTables();
     setLastBurstToast(
-      `Queued ${crew.callsign} telemetry packet (${verdict.iclCode}) for DSN uplink`
+      `Saved ${crew.callsign}'s demo snapshot locally`
     );
   }, [
     snapshot,

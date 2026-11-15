@@ -26,7 +26,7 @@ export function NasaAttributionModal({
       className="fixed inset-0 z-50 bg-space-void/85 backdrop-blur-sm flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="NASA Open Science Data Attribution and Offline Audit Inspector"
+      aria-label="NASA reference links and locally saved demo records"
     >
       <div className="bg-space-hull border border-accent-cyan/50 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-5 shadow-2xl flex flex-col gap-4">
         {/* Header */}
@@ -35,10 +35,10 @@ export function NasaAttributionModal({
             <Database className="h-5 w-5 text-accent-cyan" />
             <div>
               <h2 className="text-sm font-mono font-bold uppercase tracking-wider text-cockpit-primary">
-                NASA OPEN SCIENCE DATA ATTRIBUTION &amp; OFFLINE INDEXEDDB INSPECTOR
+                NASA REFERENCES &amp; SAVED DEMO DATA
               </h2>
               <p className="text-xs font-mono text-cockpit-muted">
-                AUTHENTIC NASA OSDR / ExMC DATASETS &amp; STORE-AND-FORWARD TELEMETRY QUEUE
+                Reference links only; live data ingestion and Mission Control transmission are not implemented.
               </p>
             </div>
           </div>
@@ -56,8 +56,11 @@ export function NasaAttributionModal({
         {/* NASA Open Science Dataset Cards */}
         <div className="space-y-2.5">
           <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-accent-cyan">
-            1. CODIFIED NASA OPEN SCIENCE DATASETS &amp; CLINICAL STANDARDS
+            NASA and research references
           </h3>
+          <p className="text-sm text-cockpit-muted">
+            These references provide context for the prototype. They do not validate its estimates or response steps.
+          </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {sources.map((src) => (
@@ -109,7 +112,7 @@ export function NasaAttributionModal({
             <div className="flex items-center justify-between">
               <span className="text-xs font-mono font-bold text-cockpit-primary flex items-center gap-1.5">
                 <FileText className="h-4 w-4 text-accent-cyan" />
-                EARTH BURST QUEUE ({queuedBursts.length})
+                SAVED SNAPSHOTS ({queuedBursts.length})
               </span>
               {queuedBursts.length > 0 ? (
                 <button
@@ -117,14 +120,14 @@ export function NasaAttributionModal({
                   onClick={onClearBursts}
                   className="text-[11px] font-mono text-status-warning hover:underline"
                 >
-                  FLUSH TRANSMITTED
+                  Clear saved snapshots
                 </button>
               ) : null}
             </div>
 
             {queuedBursts.length === 0 ? (
               <p className="text-xs font-mono text-cockpit-muted py-4 text-center">
-                No telemetry packets currently waiting in IndexedDB store-and-forward queue.
+                No saved demo snapshots.
               </p>
             ) : (
               <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
@@ -138,7 +141,7 @@ export function NasaAttributionModal({
                       <span className="text-cockpit-muted"> • {pkt.conditionCode}</span>
                     </div>
                     <span className="text-status-nominal shrink-0">
-                      {pkt.transmissionStatus}
+                      Saved locally
                     </span>
                   </div>
                 ))}
@@ -149,7 +152,7 @@ export function NasaAttributionModal({
           {/* Local IndexedDB Clinical Incident Log */}
           <div className="bg-space-void/90 border border-space-border rounded-lg p-3.5 flex flex-col gap-2">
             <span className="text-xs font-mono font-bold text-cockpit-primary">
-              DEXIE.JS LOCAL INCIDENT AUDIT LOG ({recentLogs.length})
+              DEMO ALERT LOG ({recentLogs.length})
             </span>
 
             {recentLogs.length === 0 ? (

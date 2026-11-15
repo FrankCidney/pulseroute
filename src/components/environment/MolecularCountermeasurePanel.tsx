@@ -1,4 +1,4 @@
-import { Dna, Pill, Apple, ShieldCheck, AlertOctagon } from 'lucide-react';
+import { Dna, ShieldCheck, AlertOctagon } from 'lucide-react';
 import type { MolecularCountermeasureAssessment } from '../../types/environment';
 import type { CrewHealthStatus } from '../../types/crew';
 
@@ -97,14 +97,14 @@ export function MolecularCountermeasurePanel({
             ? 'border-status-warning/70'
             : 'border-space-border'
       }`}
-      aria-label="Molecular Countermeasures NASA OSDR Genomic Model"
+      aria-label="Illustrative radiation-health estimates"
     >
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-space-border pb-2.5">
         <div className="flex items-center gap-2">
           <Dna className="h-4 w-4 text-accent-cyan" />
           <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-cockpit-primary">
-            MOLECULAR COUNTERMEASURES (NASA OSDR GENOMIC MODEL • SPACEGENES+)
+            Radiation-health estimates
           </h2>
         </div>
         <div className="flex items-center gap-2 text-[11px] font-mono">
@@ -123,11 +123,14 @@ export function MolecularCountermeasurePanel({
         </div>
       </div>
 
-      {/* 3-Column Genomic Biomarker Readout */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 font-mono tabular-nums">
+      <p className="text-sm leading-relaxed text-cockpit-muted">
+        These are exploratory prototype estimates, not a validated NASA model or medical assessment.
+      </p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 tabular-nums">
         <div className="bg-space-void/90 border border-space-border rounded-lg p-2.5">
           <span className="text-[10px] text-cockpit-muted block">
-            EST. DNA DOUBLE-STRAND BREAKS
+            ESTIMATED DNA DAMAGE INDICATOR
           </span>
           <span
             className={`text-lg font-bold ${
@@ -141,69 +144,31 @@ export function MolecularCountermeasurePanel({
             {assessment.estimatedDnaDsbPerCell.toFixed(3)} / cell
           </span>
           <span className="text-[10px] text-cockpit-muted block">
-            FLUX: {radiationRateMsvHr.toFixed(2)} mSv/h (Safe &lt; 0.050/cell)
+            Radiation rate: {radiationRateMsvHr.toFixed(2)} mSv/h
           </span>
           <p className="text-[10px] font-sans text-cockpit-muted mt-1 leading-snug">
-            Microscopic DNA strand snaps from space radiation.
+            Illustrative indicator based on simulated readings.
           </p>
         </div>
 
         <div className="bg-space-void/90 border border-space-border rounded-lg p-2.5">
           <span className="text-[10px] text-cockpit-muted block">
-            OXIDATIVE ROS STRESS INDEX
+            ILLUSTRATIVE CELL-STRESS SCORE
           </span>
           <span className="text-lg font-bold text-cockpit-primary">
             {assessment.oxidativeStressIndexPct}%
           </span>
           <span className="text-[10px] text-cockpit-muted block">
-            DOSE: {cumulativeDoseMsv.toFixed(1)} mSv (Safe &lt; 35%)
+            Cumulative sample dose: {cumulativeDoseMsv.toFixed(1)} mSv
           </span>
           <p className="text-[10px] font-sans text-cockpit-muted mt-1 leading-snug">
-            Cellular &ldquo;free-radical rusting&rdquo; from radiation &amp; CO2.
-          </p>
-        </div>
-
-        <div className="bg-space-void/90 border border-space-border rounded-lg p-2.5">
-          <span className="text-[10px] text-cockpit-muted block">
-            OSD-574 CYTOKINE SHIFT
-          </span>
-          <span className="text-xs font-bold text-accent-cyan block mt-1">
-            {assessment.cytokineInflammationState}
-          </span>
-          <span className="text-[10px] text-cockpit-muted block mt-0.5">
-            INSPIRATION4 BASELINE
-          </span>
-          <p className="text-[10px] font-sans text-cockpit-muted mt-1 leading-snug">
-            Immune &amp; skin inflammation level in microgravity.
+            Exploratory score using radiation, cabin CO₂, and HRV inputs.
           </p>
         </div>
       </div>
 
-      {/* Prescribed Radioprotectant & Nutritional Regimen */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs">
-        <div className="bg-space-void/90 border border-space-border rounded-lg p-3 flex items-start gap-2.5">
-          <Pill className="h-4 w-4 text-accent-cyan shrink-0 mt-0.5" />
-          <div>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-accent-cyan font-bold block">
-              PRESCRIBED PROPHYLACTIC ({assessment.medKitLocation})
-            </span>
-            <p className="text-cockpit-primary font-medium mt-0.5">
-              {assessment.prescribedPharmaceutical}
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-space-void/90 border border-space-border rounded-lg p-3 flex items-start gap-2.5">
-          <Apple className="h-4 w-4 text-status-nominal shrink-0 mt-0.5" />
-          <div>
-            <span className="text-[10px] font-mono uppercase tracking-wider text-status-nominal font-bold block">
-              TARGETED NUTRITIONAL COUNTERMEASURE
-            </span>
-            <p className="text-cockpit-primary font-medium mt-0.5">
-              {assessment.nutritionalCountermeasure}
-            </p>
-          </div>
-        </div>
+      <div className="rounded-lg border border-status-warning/40 bg-status-warning/5 p-3 text-sm text-cockpit-primary">
+        This prototype does not provide medication or nutrition recommendations. NASA dataset references are available under Sources &amp; saved data.
       </div>
 
       {/* Footer Note */}
@@ -216,11 +181,11 @@ export function MolecularCountermeasurePanel({
           )}
           <span>
             {isCrit
-              ? 'IMMEDIATE RADIOPROTECTANT ADMINISTRATION REQUIRED'
-              : 'GENOMIC REPAIR PATHWAYS COMPENSATED'}
+              ? 'SIMULATED RADIATION LEVEL IS HIGH'
+              : 'SIMULATED RADIATION LEVEL IS WITHIN RANGE'}
           </span>
         </span>
-        <span>ALARA COMPLIANT</span>
+        <span>Demo estimate</span>
       </div>
     </section>
   );

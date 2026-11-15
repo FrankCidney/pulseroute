@@ -3,16 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --bg-space-void: #080B10;
-  --bg-surface-hull: #0F141C;
-  --bg-surface-elevated: #161D29;
-  --border-cockpit: #232D3F;
-  --status-nominal: #10B981;
-  --status-warning: #F59E0B;
-  --status-critical: #EF4444;
-  --accent-cyan: #06B6D4;
-  --text-primary: #F8FAFC;
-  --text-muted: #64748B;
+  --bg-space-void: #F3F6F7;
+  --bg-surface-hull: #FFFFFF;
+  --bg-surface-elevated: #EEF3F4;
+  --border-cockpit: #D7E0E2;
+  --status-nominal: #16724F;
+  --status-warning: #94600A;
+  --status-critical: #B9383E;
+  --accent-cyan: #26727A;
+  --text-primary: #24343A;
+  --text-muted: #5D7078;
 }
 
 @layer base {
@@ -29,21 +29,20 @@
   }
 }
 
-/* Subtle aerospace cockpit scanline and scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #080B10;
+  background: #F3F6F7;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #232D3F;
+  background: #C4D0D3;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #06B6D4;
+  background: #26727A;
 }

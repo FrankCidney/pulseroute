@@ -71,8 +71,7 @@ export function VitalsGrid({
         <div className="flex items-center gap-2.5">
           <Gauge className="h-4 w-4 text-accent-cyan" />
           <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-cockpit-primary">
-            FUSED BIOMETRIC TELEMETRY HUD — SELECTED: {selectedCrew.name.toUpperCase()} (
-            {selectedCrew.callsign})
+            Health details — {selectedCrew.name}
           </h2>
         </div>
         <div className="flex items-center gap-3 text-xs font-mono text-cockpit-muted tabular-nums">

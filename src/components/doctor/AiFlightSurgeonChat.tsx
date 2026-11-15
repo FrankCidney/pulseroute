@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  Bot,
+  MessageSquare,
   Send,
-  Sparkles,
-  Cpu,
   HelpCircle,
   AlertTriangle,
   Loader2,
@@ -42,11 +40,11 @@ const QUICK_EXPLAINER_BUTTONS: readonly {
   intent: QuickPromptIntent;
   label: string;
 }[] = [
-  { intent: 'EXPLAIN_ALL_CARDS', label: 'Explain All Data in Plain English' },
-  { intent: 'WHY_THIS_DIAGNOSIS', label: 'Why Did AURA Diagnose This?' },
-  { intent: 'CAN_CREW_WAIT', label: 'Can Crew Wait 5 Min?' },
-  { intent: 'EXPLAIN_DNA_AND_MEDS', label: 'Explain DNA & Medicine Card' },
-  { intent: 'EXPLAIN_SANS_AND_EYES', label: 'Explain Fluid Shift & Eyes (SANS)' },
+  { intent: 'EXPLAIN_ALL_CARDS', label: 'Summarize this screen' },
+  { intent: 'WHY_THIS_DIAGNOSIS', label: 'What led to this alert?' },
+  { intent: 'CAN_CREW_WAIT', label: 'Why might this need attention?' },
+  { intent: 'EXPLAIN_DNA_AND_MEDS', label: 'Explain radiation estimates' },
+  { intent: 'EXPLAIN_SANS_AND_EYES', label: 'Explain fluid-shift indicators' },
 ];
 
 export function AiFlightSurgeonChat({
@@ -63,7 +61,7 @@ export function AiFlightSurgeonChat({
   >('UNLOADED');
   const [neuralProgressPct, setNeuralProgressPct] = useState(0);
   const [neuralStatusText, setNeuralStatusText] = useState(
-    'On-device SmolLM2-360M available for offline neural generation'
+    'Optional experimental text helper'
   );
   const [isGenerating, setIsGenerating] = useState(false);
   const [inputText, setInputText] = useState('');
@@ -147,12 +145,12 @@ export function AiFlightSurgeonChat({
       if (msg.type === 'MODEL_PROGRESS') {
         setNeuralModelStatus('LOADING');
         setNeuralProgressPct(msg.progressPct);
-        setNeuralStatusText(msg.statusText);
+        setNeuralStatusText('Preparing optional text helper…');
       } else if (msg.type === 'MODEL_READY') {
         setNeuralModelStatus('READY');
         setNeuralProgressPct(100);
         setNeuralStatusText(
-          `SmolLM2-360M Ready (${msg.deviceUsed.toUpperCase()} • Cached Offline)`
+          'Experimental text helper ready on this device'
         );
         setEngineMode('NEURAL_WEB_LLM');
       } else if (msg.type === 'GENERATION_COMPLETE') {
@@ -164,7 +162,7 @@ export function AiFlightSurgeonChat({
             role: 'assistant',
             timestampLabel: new Date().toLocaleTimeString(),
             engineSource: 'SMOLLM2_360M_ON_DEVICE',
-            title: `SmolLM2-360M Flight Surgeon (${latestCtxRef.current.crew.name})`,
+            title: `Experimental text helper (${latestCtxRef.current.crew.name})`,
             content: msg.replyText,
           },
         ]);
@@ -280,20 +278,20 @@ export function AiFlightSurgeonChat({
   return (
     <section
       className="bg-space-hull border border-accent-cyan/40 rounded-xl p-4 flex flex-col gap-3"
-      aria-label="Conversational AI Flight Surgeon and Plain-English Data Interpreter"
+      aria-label="Plain-language explanation and optional experimental text helper"
     >
-      {/* Top Header & Offline Neural LLM Toggle */}
+      {/* Header and optional text helper */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-space-border pb-2.5">
         <div className="flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-lg bg-accent-cyan/15 border border-accent-cyan/40 flex items-center justify-center text-accent-cyan">
-            <Bot className="h-4 w-4" />
+            <MessageSquare className="h-4 w-4" />
           </div>
           <div>
             <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-cockpit-primary">
-              AI FLIGHT SURGEON — PLAIN-ENGLISH INTERPRETER &amp; SYMPTOM TRIAGE
+              Understand this assessment
             </h2>
             <p className="text-[11px] font-mono text-cockpit-muted">
-              Translates complex sensor cards into plain English &amp; correlates crew symptoms
+              Plain-language summaries use the same simulated readings shown in this prototype.
             </p>
           </div>
         </div>
@@ -302,8 +300,8 @@ export function AiFlightSurgeonChat({
           <span className="text-[10px] font-mono px-2.5 py-1 rounded bg-status-nominal/15 text-status-nominal border border-status-nominal/30 flex items-center gap-1">
             <CheckCircle2 className="h-3 w-3" />
             {engineMode === 'NEURAL_WEB_LLM'
-              ? 'ENGINE: SMOLLM2-360M (ON-DEVICE)'
-              : 'ENGINE: INSTANT CLINICAL NARRATOR (0ms)'}
+              ? 'EXPERIMENTAL TEXT HELPER'
+              : 'RULE-BASED EXPLANATION'}
           </span>
 
           <button
@@ -311,21 +309,21 @@ export function AiFlightSurgeonChat({
             onClick={handleActivateNeuralLlm}
             disabled={neuralModelStatus === 'LOADING'}
             className="min-h-[38px] px-3 py-1 rounded-lg bg-space-elevated hover:bg-space-border border border-accent-cyan/40 text-[11px] font-mono font-semibold text-accent-cyan flex items-center gap-1.5 transition-colors disabled:opacity-60"
-            title="Download and cache quantized SmolLM2-360M-Instruct weights into browser storage for on-device neural generation"
+            title="Load an experimental text-generation model. Its responses may be inaccurate and do not determine the displayed alerts."
           >
             {neuralModelStatus === 'LOADING' ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <Cpu className="h-3.5 w-3.5" />
+              <HelpCircle className="h-3.5 w-3.5" />
             )}
             <span>
               {neuralModelStatus === 'READY'
                 ? engineMode === 'NEURAL_WEB_LLM'
-                  ? 'SWITCH TO INSTANT NARRATOR'
-                  : 'USE SMOLLM2-360M LLM'
+                  ? 'USE RULE-BASED EXPLANATION'
+                  : 'TRY EXPERIMENTAL TEXT HELPER'
                 : neuralModelStatus === 'LOADING'
-                  ? `CACHING LLM (${neuralProgressPct}%)`
-                  : 'LOAD OFFLINE NEURAL LLM (SmolLM2-360M)'}
+                  ? `PREPARING HELPER (${neuralProgressPct}%)`
+                  : 'TRY EXPERIMENTAL TEXT HELPER'}
             </span>
           </button>
         </div>
@@ -351,7 +349,7 @@ export function AiFlightSurgeonChat({
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-[10px] font-mono uppercase tracking-wider text-cockpit-muted flex items-center gap-1 mr-1">
           <HelpCircle className="h-3.5 w-3.5 text-accent-cyan" />
-          CLICK TO EXPLAIN:
+          SUGGESTED QUESTIONS:
         </span>
         {QUICK_EXPLAINER_BUTTONS.map((btn) => (
           <button
@@ -360,7 +358,6 @@ export function AiFlightSurgeonChat({
             onClick={() => handleQuickPrompt(btn.intent, btn.label)}
             className="px-2.5 py-1.5 rounded-md bg-space-void hover:bg-space-elevated border border-space-border hover:border-accent-cyan/50 text-xs font-mono text-cockpit-primary flex items-center gap-1.5 transition-colors"
           >
-            <Sparkles className="h-3 w-3 text-accent-cyan" />
             <span>{btn.label}</span>
           </button>
         ))}
@@ -381,12 +378,12 @@ export function AiFlightSurgeonChat({
               <span className="font-bold text-accent-cyan">
                 {msg.role === 'user'
                   ? `CREW QUERY (${crew.callsign})`
-                  : msg.title ?? 'AURA FLIGHT SURGEON'}
+                  : msg.title ?? 'AURA explanation'}
               </span>
               <span>
                 {msg.engineSource === 'SMOLLM2_360M_ON_DEVICE'
-                  ? 'SmolLM2-360M Neural'
-                  : 'Deterministic Narrator'}{' '}
+                  ? 'Experimental text helper'
+                  : 'Rule-based explanation'}{' '}
                 • {msg.timestampLabel}
               </span>
             </div>
@@ -414,7 +411,7 @@ export function AiFlightSurgeonChat({
         {isGenerating ? (
           <div className="p-3 rounded-lg bg-space-elevated border border-accent-cyan/30 text-xs font-mono text-accent-cyan flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>SmolLM2-360M evaluating live NASA ExMC telemetry...</span>
+            <span>Preparing the optional text helper…</span>
           </div>
         ) : null}
       </div>
@@ -433,7 +430,7 @@ export function AiFlightSurgeonChat({
           className="min-h-[44px] px-4 py-2 rounded-lg bg-accent-cyan hover:bg-accent-cyan/90 text-space-void font-mono font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0"
         >
           <Send className="h-3.5 w-3.5" />
-          <span>ASK SURGEON</span>
+          <span>Ask a question</span>
         </button>
       </form>
     </section>
