@@ -27,6 +27,7 @@ The public challenge listing describes the challenge as intermediate and focuses
 - A simplified overview of crew status, sample health readings, and cabin conditions.
 - Five repeatable demo situations: baseline, solar storm, high cabin CO₂, low cabin pressure, and fluid-shift / eye-risk indicators.
 - Rule-based scenario alerts, a guided self-check flow, and illustrative response checklists.
+- A health assistant that explains the selected demo readings, accepts symptom descriptions, and offers an optional experimental on-device language model.
 - Crew check-in reports that pair self-reported descriptions with clearly labeled simulated readings; reports can be reviewed and exported from local browser storage.
 - Local browser storage for incident records and saved sample snapshots.
 - Progressive Web App configuration intended to support offline use.
@@ -36,6 +37,7 @@ The public challenge listing describes the challenge as intermediate and focuses
 
 - Connections to real wearables, spacecraft sensors, or live NASA data feeds.
 - Evidence that the prototype’s thresholds and calculated scores are clinically or operationally validated.
+- Accuracy and safety validation of the optional AI assistant; its output is experimental and must not be used as diagnosis or treatment advice.
 - A verified mapping from every displayed estimate to source data, methods, units, and limitations.
 - Transmission of queued records to Mission Control; the current queue is local storage only.
 - Clinical review of the response text. The demo must not be used to diagnose or treat anyone.

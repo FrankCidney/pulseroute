@@ -288,10 +288,10 @@ export function AiFlightSurgeonChat({
           </div>
           <div>
             <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-cockpit-primary">
-              Understand this assessment
+              AI health assistant
             </h2>
             <p className="text-[11px] font-mono text-cockpit-muted">
-              Plain-language summaries use the same simulated readings shown in this prototype.
+              Explains simulated readings and responds to crew-reported symptoms; it does not diagnose or recommend treatment.
             </p>
           </div>
         </div>
@@ -300,8 +300,8 @@ export function AiFlightSurgeonChat({
           <span className="text-[10px] font-mono px-2.5 py-1 rounded bg-status-nominal/15 text-status-nominal border border-status-nominal/30 flex items-center gap-1">
             <CheckCircle2 className="h-3 w-3" />
             {engineMode === 'NEURAL_WEB_LLM'
-              ? 'EXPERIMENTAL TEXT HELPER'
-              : 'RULE-BASED EXPLANATION'}
+              ? 'EXPERIMENTAL ON-DEVICE AI'
+              : 'RULE-BASED REPLIES'}
           </span>
 
           <button
@@ -309,7 +309,7 @@ export function AiFlightSurgeonChat({
             onClick={handleActivateNeuralLlm}
             disabled={neuralModelStatus === 'LOADING'}
             className="min-h-[38px] px-3 py-1 rounded-lg bg-space-elevated hover:bg-space-border border border-accent-cyan/40 text-[11px] font-mono font-semibold text-accent-cyan flex items-center gap-1.5 transition-colors disabled:opacity-60"
-            title="Load an experimental text-generation model. Its responses may be inaccurate and do not determine the displayed alerts."
+            title="Load an optional experimental on-device AI model. Replies may be inaccurate and do not determine the demo alerts."
           >
             {neuralModelStatus === 'LOADING' ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -319,11 +319,11 @@ export function AiFlightSurgeonChat({
             <span>
               {neuralModelStatus === 'READY'
                 ? engineMode === 'NEURAL_WEB_LLM'
-                  ? 'USE RULE-BASED EXPLANATION'
-                  : 'TRY EXPERIMENTAL TEXT HELPER'
+                  ? 'USE RULE-BASED REPLIES'
+                  : 'TRY OPTIONAL ON-DEVICE AI'
                 : neuralModelStatus === 'LOADING'
-                  ? `PREPARING HELPER (${neuralProgressPct}%)`
-                  : 'TRY EXPERIMENTAL TEXT HELPER'}
+                  ? `PREPARING AI MODEL (${neuralProgressPct}%)`
+                  : 'TRY OPTIONAL ON-DEVICE AI'}
             </span>
           </button>
         </div>
@@ -362,6 +362,10 @@ export function AiFlightSurgeonChat({
           </button>
         ))}
       </div>
+
+      <p className="rounded-md border border-status-warning/40 bg-status-warning/5 px-3 py-2 text-xs text-cockpit-muted">
+        Prototype only: readings are simulated, and assistant responses may be inaccurate. Do not use this assistant for diagnosis, treatment, or operational decisions.
+      </p>
 
       {/* Conversation & Plain-English Explanation Feed */}
       <div className="bg-space-void/90 border border-space-border rounded-lg p-3 max-h-72 overflow-y-auto space-y-2.5">

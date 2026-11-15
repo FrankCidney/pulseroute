@@ -13,6 +13,7 @@ import {
 import { FlightSurgeonPanel } from './components/doctor/FlightSurgeonPanel';
 import { GuidedSelfAssessmentWizard } from './components/doctor/GuidedSelfAssessmentWizard';
 import { CrewCheckInReport } from './components/doctor/CrewCheckInReport';
+import { AiFlightSurgeonChat } from './components/doctor/AiFlightSurgeonChat';
 import { ScenarioBar } from './components/scenarios/ScenarioBar';
 import { NasaAttributionModal } from './components/scenarios/NasaAttributionModal';
 import { useAuraCockpit } from './hooks/useAuraCockpit';
@@ -150,10 +151,17 @@ export function App() {
                 onToggleChecklistStep={handleToggleChecklistStep}
                 onOpenSelfAssessmentWizard={() => setIsWizardOpen(true)}
               />
+              <AiFlightSurgeonChat
+                crew={selectedCrew}
+                vitals={selectedStream.latestVitals}
+                environment={snapshot.environment}
+                verdict={selectedVerdict}
+                molecular={molecularAssessment}
+              />
               <div className="rounded-lg border border-space-border bg-space-hull p-4 text-sm leading-relaxed text-cockpit-muted">
                 <h2 className="font-semibold text-cockpit-primary">About this demonstration</h2>
                 <p className="mt-1">
-                  Alerts are generated from sample scenarios and fixed prototype rules. The checklist shows a review workflow only; it does not provide medical advice or replace approved mission procedures.
+                  Alerts and assistant explanations use simulated readings and prototype rules. The optional on-device AI may be inaccurate. Neither the assistant nor checklist provides medical advice or replaces approved mission procedures.
                 </p>
               </div>
             </div>
