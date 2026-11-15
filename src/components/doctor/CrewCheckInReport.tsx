@@ -161,7 +161,7 @@ export function CrewCheckInReport({
 
   return (
     <section
-      className="lg:col-span-12 rounded-xl border border-space-border bg-space-hull p-4"
+      className="rounded-xl border border-space-border bg-space-hull p-4"
       aria-labelledby="crew-check-in-title"
     >
       <div className="flex items-start gap-3 border-b border-space-border pb-3">

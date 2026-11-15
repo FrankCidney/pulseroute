@@ -115,6 +115,7 @@ export function App() {
               onSelectCrew={setSelectedCrewId}
               onOpenMedicalTab={() => setActivePage('medical')}
               scenarioId={activeScenarioId}
+              molecular={molecularAssessment}
             />
           )}
           {activePage === 'telemetry' && (
@@ -150,13 +151,6 @@ export function App() {
                 completedStepIds={completedStepIds}
                 onToggleChecklistStep={handleToggleChecklistStep}
                 onOpenSelfAssessmentWizard={() => setIsWizardOpen(true)}
-              />
-              <AiFlightSurgeonChat
-                crew={selectedCrew}
-                vitals={selectedStream.latestVitals}
-                environment={snapshot.environment}
-                verdict={selectedVerdict}
-                molecular={molecularAssessment}
               />
               <div className="rounded-lg border border-space-border bg-space-hull p-4 text-sm leading-relaxed text-cockpit-muted">
                 <h2 className="font-semibold text-cockpit-primary">About this demonstration</h2>
@@ -224,6 +218,7 @@ interface OverviewPageProps {
   onSelectCrew: (crewId: CrewId) => void;
   onOpenMedicalTab: () => void;
   scenarioId: ScenarioId;
+  molecular: ReturnType<typeof evaluateMolecularCountermeasures>;
 }
 
 function OverviewPage({
@@ -238,6 +233,7 @@ function OverviewPage({
   onSelectCrew,
   onOpenMedicalTab,
   scenarioId,
+  molecular,
 }: OverviewPageProps) {
   const { latestVitals } = selectedStream;
   const activeScenario = getScenarioPresetById(activeScenarioId);
@@ -352,14 +348,23 @@ function OverviewPage({
         </section>
       </div>
 
-      <CrewCheckInReport
-        crew={selectedCrew}
-        scenarioId={scenarioId}
-        scenarioLabel={activeScenario.shortTitle}
-        vitals={latestVitals}
-        environment={environment}
-        verdict={selectedVerdict}
-      />
+      <div className="lg:col-span-12 grid grid-cols-1 2xl:grid-cols-2 gap-3 items-start">
+        <CrewCheckInReport
+          crew={selectedCrew}
+          scenarioId={scenarioId}
+          scenarioLabel={activeScenario.shortTitle}
+          vitals={latestVitals}
+          environment={environment}
+          verdict={selectedVerdict}
+        />
+        <AiFlightSurgeonChat
+          crew={selectedCrew}
+          vitals={latestVitals}
+          environment={environment}
+          verdict={selectedVerdict}
+          molecular={molecular}
+        />
+      </div>
     </div>
   );
 }
