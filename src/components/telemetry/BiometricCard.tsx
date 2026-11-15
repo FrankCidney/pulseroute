@@ -28,21 +28,21 @@ const CARD_STATUS_THEME: Record<
     valueText: 'text-cockpit-primary',
     badgeBg: 'bg-status-nominal/15 border-status-nominal/30',
     badgeText: 'text-status-nominal',
-    label: 'NOMINAL',
+    label: 'IN RANGE',
   },
   WARNING: {
     border: 'border-status-warning/70',
     valueText: 'text-status-warning',
     badgeBg: 'bg-status-warning/15 border-status-warning/40',
     badgeText: 'text-status-warning',
-    label: 'DRIFT',
+    label: 'CHECK',
   },
   CRITICAL: {
     border: 'border-status-critical ring-1 ring-status-critical/40',
     valueText: 'text-status-critical',
     badgeBg: 'bg-status-critical/20 border-status-critical',
     badgeText: 'text-status-critical',
-    label: 'ALARM',
+    label: 'HIGH',
   },
 };
 
@@ -105,7 +105,7 @@ export function BiometricCard({
 
       {/* Footer Baseline Reference */}
       <div className="pt-1.5 border-t border-space-border/60 flex items-center justify-between text-[11px] font-mono text-cockpit-muted">
-        <span>NASA BASELINE</span>
+        <span>REFERENCE RANGE</span>
         <span className="tabular-nums text-cockpit-primary/80">{nominalRangeText}</span>
       </div>
     </div>

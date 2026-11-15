@@ -49,9 +49,9 @@ export const JUDGE_SCENARIO_PRESETS: readonly ScenarioPreset[] = [
   {
     id: 'NORMAL_CRUISE',
     numberLabel: 1,
-    shortTitle: 'Normal Cruise',
+    shortTitle: 'Normal baseline',
     earthClinicTitle: 'Nominal Ward Baseline',
-    subtitle: 'All Astroskin biometrics and ECLSS cabin sensors within NASA nominal baselines',
+    subtitle: 'All sample readings are within their normal demo ranges.',
     primaryAffectedCrewId: 'chen',
     eclssTarget: {
       cabinPressurePsi: 14.7,
@@ -69,9 +69,9 @@ export const JUDGE_SCENARIO_PRESETS: readonly ScenarioPreset[] = [
   {
     id: 'SOLAR_STORM_SPE',
     numberLabel: 2,
-    shortTitle: 'Solar Storm / SPE',
+    shortTitle: 'Solar storm',
     earthClinicTitle: 'Radiation / Hazmat Spike',
-    subtitle: 'Exterior proton flux spikes to 8.5 mSv/h; triggers Storm Shelter & Amifostine protocol',
+    subtitle: 'A simulated radiation increase prompts a shelter warning.',
     primaryAffectedCrewId: 'chen',
     eclssTarget: {
       cabinPressurePsi: 14.7,
@@ -108,9 +108,9 @@ export const JUDGE_SCENARIO_PRESETS: readonly ScenarioPreset[] = [
   {
     id: 'CABIN_CO2_LEAK',
     numberLabel: 3,
-    shortTitle: 'Cabin CO2 Leak',
+    shortTitle: 'High cabin CO2',
     earthClinicTitle: 'Hypercapnia / Scrubber Failure',
-    subtitle: 'CDRA scrubber saturation pushes CO2 to 0.62%; crew tachypnea, HRV drop & cognitive fatigue',
+    subtitle: 'A simulated cabin-air problem raises carbon dioxide readings.',
     primaryAffectedCrewId: 'rostov',
     eclssTarget: {
       cabinPressurePsi: 14.6,
@@ -142,9 +142,9 @@ export const JUDGE_SCENARIO_PRESETS: readonly ScenarioPreset[] = [
   {
     id: 'ACUTE_HYPOXIA',
     numberLabel: 4,
-    shortTitle: 'Acute Hypoxia',
+    shortTitle: 'Low cabin pressure',
     earthClinicTitle: 'Acute Hypoxemic Crisis',
-    subtitle: 'Module B depressurization to 10.8 psi; Pilot Rivera SpO2 plunges to 87% with tachycardia',
+    subtitle: 'A simulated pressure drop lowers a crew member’s blood-oxygen reading.',
     primaryAffectedCrewId: 'rivera',
     eclssTarget: {
       cabinPressurePsi: 10.8,
@@ -176,9 +176,9 @@ export const JUDGE_SCENARIO_PRESETS: readonly ScenarioPreset[] = [
   {
     id: 'SANS_FLUID_SHIFT',
     numberLabel: 5,
-    shortTitle: 'SANS & Fluid Shift',
+    shortTitle: 'Fluid shift / eye risk',
     earthClinicTitle: 'Ocular Edema & ICP Spike',
-    subtitle: 'Cephalic venous engorgement spikes +24% with IOP 20.4 mmHg & ONSD 6.15 mm (Papilledema)',
+    subtitle: 'A simulated fluid-shift scenario raises eye-health indicators.',
     primaryAffectedCrewId: 'vance',
     eclssTarget: {
       cabinPressurePsi: 14.7,

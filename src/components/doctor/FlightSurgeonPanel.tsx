@@ -5,9 +5,7 @@ import {
   CheckCircle2,
   CheckSquare,
   Square,
-  MessageSquare,
   ClipboardList,
-  Clock,
   Eye,
 } from 'lucide-react';
 import type { OperationalMode } from '../../types/crew';
@@ -26,22 +24,22 @@ const SEVERITY_BADGE_MAP: Record<
   { label: string; badgeClass: string; panelBorderClass: string }
 > = {
   NOMINAL: {
-    label: 'NOMINAL — GRADE 0',
+    label: 'In demo range',
     badgeClass: 'bg-status-nominal/15 text-status-nominal border-status-nominal/40',
     panelBorderClass: 'border-space-border',
   },
   GRADE_1: {
-    label: 'GRADE 1 ADVISORY',
+    label: 'Monitor',
     badgeClass: 'bg-accent-cyan/15 text-accent-cyan border-accent-cyan/40',
     panelBorderClass: 'border-accent-cyan/50',
   },
   GRADE_2: {
-    label: 'GRADE 2 WARNING',
+    label: 'Needs review',
     badgeClass: 'bg-status-warning/15 text-status-warning border-status-warning/40',
     panelBorderClass: 'border-status-warning/70',
   },
   GRADE_3: {
-    label: 'GRADE 3 EMERGENCY ALARM',
+    label: 'Urgent alert',
     badgeClass: 'bg-status-critical/20 text-status-critical border-status-critical',
     panelBorderClass: 'border-status-critical ring-1 ring-status-critical/40',
   },
@@ -57,18 +55,21 @@ export function FlightSurgeonPanel({
   const isMarsMode = operationalMode === 'MARS_TRANSIT';
   const severityStyle = SEVERITY_BADGE_MAP[verdict.severityGrade];
   const displayTitle = isMarsMode ? verdict.title : verdict.earthClinicTitle;
-  const displayDirective = isMarsMode
-    ? verdict.flightSurgeonDirective
-    : verdict.earthClinicDirective;
 
   const completedCount = verdict.checklistSteps.filter((s) =>
     completedStepIds.has(s.id)
   ).length;
+  const checklistDescriptions = [
+    'Review the sample readings linked to this alert.',
+    'Compare the readings with the selected demo scenario.',
+    'Refer to approved mission medical and operations procedures.',
+    'Save a snapshot for follow-up with the mission team.',
+  ];
 
   return (
     <section
       className={`bg-space-hull border ${severityStyle.panelBorderClass} rounded-xl p-4 flex flex-col gap-3.5 transition-colors`}
-      aria-label="Autonomous Clinical Diagnostic Engine and AI Flight Surgeon"
+      aria-label="Prototype health assessment and response steps"
     >
       {/* Top Header Strip */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-space-border pb-2.5">
@@ -76,15 +77,12 @@ export function FlightSurgeonPanel({
           <Stethoscope className="h-4 w-4 text-accent-cyan" />
           <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-cockpit-primary">
             {isMarsMode
-              ? 'AUTONOMOUS CLINICAL DIAGNOSTIC ENGINE & AI FLIGHT SURGEON'
-              : 'DETERMINISTIC CLINICAL TRIAGE & EMERGENCY PROTOCOL ENGINE'}
+              ? 'HEALTH ASSESSMENT & NEXT STEPS'
+              : 'HEALTH REVIEW & NEXT STEPS'}
           </h2>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-mono text-cockpit-muted">
-            PROTOCOL: <strong className="text-cockpit-primary">{verdict.iclCode}</strong>
-          </span>
           <span
             className={`px-2.5 py-0.5 rounded border text-[11px] font-mono font-bold ${severityStyle.badgeClass}`}
           >
@@ -96,7 +94,7 @@ export function FlightSurgeonPanel({
             className="min-h-[40px] px-3 py-1.5 rounded-lg bg-accent-cyan/15 hover:bg-accent-cyan/25 border border-accent-cyan/40 text-xs font-mono font-semibold text-accent-cyan flex items-center gap-1.5 transition-colors"
           >
             <ClipboardList className="h-3.5 w-3.5" />
-            <span>GUIDED SELF-ASSESSMENT WIZARD</span>
+            <span>Guided self-check</span>
           </button>
         </div>
       </div>
@@ -109,14 +107,14 @@ export function FlightSurgeonPanel({
             <div className="flex items-start justify-between gap-2">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider text-cockpit-muted block">
-                  DIAGNOSTIC ENGINE VERDICT (0% HALLUCINATION RULESET)
+                  PROTOTYPE ASSESSMENT
                 </span>
                 <h3 className="text-base font-bold text-cockpit-primary mt-0.5">
                   {displayTitle}
                 </h3>
               </div>
               {verdict.severityGrade === 'GRADE_3' ? (
-                <ShieldAlert className="h-6 w-6 text-status-critical shrink-0 animate-bounce" />
+                <ShieldAlert className="h-6 w-6 text-status-critical shrink-0" />
               ) : verdict.severityGrade === 'NOMINAL' ? (
                 <CheckCircle2 className="h-5 w-5 text-status-nominal shrink-0" />
               ) : (
@@ -126,21 +124,10 @@ export function FlightSurgeonPanel({
 
             <p className="text-xs text-cockpit-muted">{verdict.primaryCauseText}</p>
 
-            {/* Time to Impairment Banner */}
-            <div className="flex items-center justify-between px-3 py-1.5 rounded bg-space-elevated border border-space-border text-xs font-mono">
-              <span className="flex items-center gap-1.5 text-cockpit-muted">
-                <Clock className="h-3.5 w-3.5 text-status-warning" />
-                TIME TO IMPAIRMENT:
-              </span>
-              <span className="font-bold text-cockpit-primary">
-                {verdict.timeToImpairmentText}
-              </span>
-            </div>
-
             {/* Multi-Sensor Correlation Proof List */}
             <div className="space-y-1 pt-1">
               <span className="text-[10px] font-mono uppercase tracking-wider text-accent-cyan block">
-                MULTI-SENSOR CORRELATION PROOF:
+                INDICATORS BEHIND THIS ALERT:
               </span>
               <ul className="space-y-1 text-xs font-mono text-cockpit-primary/90">
                 {verdict.sensorCorrelationProof.map((line, idx) => (
@@ -157,9 +144,13 @@ export function FlightSurgeonPanel({
           <div className="pt-2 border-t border-space-border/60 flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono">
             <span className="flex items-center gap-1.5 text-cockpit-muted">
               <Eye className="h-3.5 w-3.5 text-accent-cyan" />
-              SANS TRACKER: <strong className="text-cockpit-primary">{verdict.sansAssessment.ocularEdemaStage}</strong>
+              FLUID SHIFT &amp; EYE INDICATORS: <strong className="text-cockpit-primary">{verdict.sansAssessment.ocularEdemaStage}</strong>
             </span>
-            <span className="text-accent-cyan">{verdict.sansAssessment.lbnpPrescription}</span>
+            <span className="text-accent-cyan">
+              {verdict.sansAssessment.metrics.lbnpRecommended
+                ? 'Prototype suggests further review.'
+                : 'No elevated prototype indicator.'}
+            </span>
           </div>
         </div>
 
@@ -167,7 +158,7 @@ export function FlightSurgeonPanel({
         <div className="lg:col-span-6 bg-space-void/90 border border-space-border rounded-lg p-3.5 flex flex-col justify-between gap-2.5">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-cockpit-primary">
-              FLIGHT SURGEON ACTION CHECKLIST (STEP-BY-STEP)
+              DEMO CHECKLIST — REVIEW EXAMPLES ONLY
             </span>
             <span className="text-xs font-mono text-accent-cyan tabular-nums">
               {completedCount} / {verdict.checklistSteps.length} COMPLETED
@@ -177,7 +168,9 @@ export function FlightSurgeonPanel({
           <div className="flex flex-col gap-2">
             {verdict.checklistSteps.map((step) => {
               const isDone = completedStepIds.has(step.id);
-              const text = isMarsMode ? step.instruction : step.earthClinicInstruction;
+              const text =
+                checklistDescriptions[step.stepNumber - 1] ??
+                'Review the selected scenario and its sample readings.';
 
               return (
                 <button
@@ -187,9 +180,7 @@ export function FlightSurgeonPanel({
                   className={`w-full min-h-[48px] text-left px-3 py-2 rounded-lg border transition-all flex items-start gap-2.5 ${
                     isDone
                       ? 'bg-status-nominal/10 border-status-nominal/40 text-cockpit-muted line-through'
-                      : step.critical
-                        ? 'bg-space-elevated border-space-border hover:border-accent-cyan text-cockpit-primary'
-                        : 'bg-space-void border-space-border hover:border-accent-cyan/50 text-cockpit-primary'
+                      : 'bg-space-void border-space-border hover:border-accent-cyan/50 text-cockpit-primary'
                   }`}
                 >
                   {isDone ? (
@@ -200,13 +191,8 @@ export function FlightSurgeonPanel({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-mono font-bold text-accent-cyan">
-                        STEP {step.stepNumber} • {step.targetSubsystem}
+                        STEP {step.stepNumber}
                       </span>
-                      {step.critical && !isDone ? (
-                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-status-critical/20 text-status-critical">
-                          PRIORITY
-                        </span>
-                      ) : null}
                     </div>
                     <p className="text-xs mt-0.5 leading-snug">{text}</p>
                   </div>
@@ -217,23 +203,6 @@ export function FlightSurgeonPanel({
         </div>
       </div>
 
-      {/* Conversational AI Flight Surgeon Voice Directive Strip */}
-      <div className="bg-space-elevated border border-accent-cyan/30 rounded-lg px-3.5 py-2.5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 text-xs">
-          <MessageSquare className="h-4 w-4 text-accent-cyan shrink-0" />
-          <div>
-            <span className="font-mono font-bold text-accent-cyan mr-2">
-              AI FLIGHT SURGEON DIRECTIVE:
-            </span>
-            <span className="text-cockpit-primary font-medium">
-              &ldquo;{displayDirective}&rdquo;
-            </span>
-          </div>
-        </div>
-        <span className="text-[11px] font-mono text-cockpit-muted shrink-0 hidden sm:inline">
-          CONFIDENCE: {verdict.confidencePct}%
-        </span>
-      </div>
     </section>
   );
 }

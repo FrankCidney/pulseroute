@@ -5,26 +5,26 @@ export default {
     extend: {
       colors: {
         space: {
-          void: '#080B10',
-          hull: '#0F141C',
-          elevated: '#161D29',
-          border: '#232D3F',
+          void: '#F3F6F7',
+          hull: '#FFFFFF',
+          elevated: '#EEF3F4',
+          border: '#D7E0E2',
         },
         status: {
-          nominal: '#10B981',
-          warning: '#F59E0B',
-          critical: '#EF4444',
+          nominal: '#16724F',
+          warning: '#94600A',
+          critical: '#B9383E',
         },
         accent: {
-          cyan: '#06B6D4',
+          cyan: '#26727A',
         },
         cockpit: {
-          primary: '#F8FAFC',
-          muted: '#64748B',
+          primary: '#24343A',
+          muted: '#5D7078',
         },
       },
       fontFamily: {
-        mono: ['"JetBrains Mono"', '"Fira Code"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        mono: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
     },

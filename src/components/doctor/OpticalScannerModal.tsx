@@ -101,8 +101,8 @@ export function OpticalScannerModal({
         <div className="flex items-center justify-between border-b border-space-border pb-2.5">
           <div className="flex items-center gap-2">
             <Camera className="h-4 w-4 text-accent-cyan" />
-            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-cockpit-primary">
-              MULTI-MODAL OPTICAL SCANNER (SANS / SKIN)
+            <h2 className="text-sm font-semibold text-cockpit-primary">
+              Eye and skin scan examples
             </h2>
           </div>
 
@@ -116,7 +116,7 @@ export function OpticalScannerModal({
                   : 'text-cockpit-muted hover:text-cockpit-primary'
               }`}
             >
-              EYE OPTIC DISC
+              EYE HEALTH
             </button>
             <button
               type="button"
@@ -127,7 +127,7 @@ export function OpticalScannerModal({
                   : 'text-cockpit-muted hover:text-cockpit-primary'
               }`}
             >
-              SKIN (OSD-574)
+              SKIN HEALTH
             </button>
           </div>
         </div>
@@ -137,7 +137,7 @@ export function OpticalScannerModal({
           <div className="h-20 w-20 rounded-lg bg-space-elevated border border-accent-cyan/40 flex flex-col items-center justify-center relative shrink-0 overflow-hidden">
             <Eye className="h-8 w-8 text-accent-cyan" />
             <span className="text-[9px] font-mono text-cockpit-muted mt-1">
-              {scanMode === 'RETINAL_FUNDUS_SANS' ? 'FUNDUS AI' : 'DERM AI'}
+              {scanMode === 'RETINAL_FUNDUS_SANS' ? 'EYE SCAN DEMO' : 'SKIN SCAN DEMO'}
             </span>
           </div>
 
@@ -154,9 +154,7 @@ export function OpticalScannerModal({
               >
                 {current.gradeLabel}
               </span>
-              <span className="text-[10px] font-mono text-cockpit-muted">
-                {current.confidencePct}% CONF
-              </span>
+              <span className="text-[10px] font-mono text-cockpit-muted">DEMO ONLY</span>
             </div>
             <p className="text-cockpit-primary line-clamp-2 text-xs">
               {current.primaryObservation}
@@ -173,7 +171,7 @@ export function OpticalScannerModal({
           className="w-full min-h-[44px] px-3 py-2 rounded-lg bg-space-elevated hover:bg-space-border border border-accent-cyan/40 text-xs font-mono font-semibold text-accent-cyan flex items-center justify-center gap-2 transition-colors"
         >
           <Scan className="h-4 w-4" />
-          <span>OPEN FULL OPTICAL RETICLE &amp; BIOMARKER INSPECTOR</span>
+          <span>View eye and skin scan examples</span>
         </button>
       </section>
 
@@ -194,7 +192,7 @@ export function OpticalScannerModal({
                     MULTI-MODAL OPTICAL SCANNER — {crewName.toUpperCase()}
                   </h3>
                   <p className="text-xs font-mono text-cockpit-muted">
-                    SANS FUNDUS PAPILLEDEMA &amp; NASA OSDR OSD-574 DERMATOLOGICAL TRIAGE
+                    Example eye and skin scan findings
                   </p>
                 </div>
               </div>
@@ -217,7 +215,7 @@ export function OpticalScannerModal({
                     : 'bg-space-void border-space-border text-cockpit-muted'
                 }`}
               >
-                1. RETINAL OPTIC DISC (SANS / EXMC-04)
+                Eye health
               </button>
               <button
                 type="button"
@@ -228,7 +226,7 @@ export function OpticalScannerModal({
                     : 'bg-space-void border-space-border text-cockpit-muted'
                 }`}
               >
-                2. SKIN LESION &amp; MICROBIOME (OSD-574)
+                Skin health
               </button>
             </div>
 

@@ -2,7 +2,7 @@ import {
   LayoutDashboard,
   Activity,
   Cpu,
-  Stethoscope,
+  ClipboardList,
   UserCheck,
   AlertTriangle,
 } from 'lucide-react';
@@ -14,27 +14,27 @@ type PageId = 'overview' | 'telemetry' | 'environment' | 'medical' | 'crew';
 const PAGES: { id: PageId; label: string; icon: ReactNode; hint: string }[] = [
   {
     id: 'overview',
-    label: 'Mission Overview',
+    label: 'Overview',
     icon: <LayoutDashboard className="h-4 w-4" />,
     hint: 'Crew status, vitals summary & active alerts',
   },
   {
     id: 'telemetry',
-    label: 'Telemetry',
+    label: 'Health details',
     icon: <Activity className="h-4 w-4" />,
-    hint: 'Fused biometric HUD & ECG waveform',
+    hint: 'Health readings and trends',
   },
   {
     id: 'environment',
-    label: 'Environment',
+    label: 'Spacecraft',
     icon: <Cpu className="h-4 w-4" />,
-    hint: 'ECLSS cabin atmosphere & radiation',
+    hint: 'Cabin air and radiation readings',
   },
   {
     id: 'medical',
-    label: 'Medical',
-    icon: <Stethoscope className="h-4 w-4" />,
-    hint: 'Flight surgeon diagnosis & checklist',
+    label: 'Response steps',
+    icon: <ClipboardList className="h-4 w-4" />,
+    hint: 'Review the prototype response checklist',
   },
   {
     id: 'crew',
@@ -71,7 +71,7 @@ export function PageNav({
           <div
             className={`h-8 w-8 rounded-lg flex items-center justify-center border transition-colors ${
               activeEmergencyCount > 0
-                ? 'bg-status-critical/20 border-status-critical text-status-critical animate-pulse'
+                ? 'bg-status-critical/10 border-status-critical text-status-critical'
                 : 'bg-accent-cyan/10 border-accent-cyan/40 text-accent-cyan'
             }`}
           >
@@ -81,8 +81,8 @@ export function PageNav({
               <LayoutDashboard className="h-3 w-3" />
             )}
           </div>
-          <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-cockpit-primary">
-            {isMarsMode ? 'AURA' : 'CLINIC'}
+          <div className="text-sm font-bold tracking-wide text-cockpit-primary">
+            {isMarsMode ? 'AURA' : 'AURA • Remote care'}
           </div>
 
           <div className="flex-1 flex items-center gap-1 px-3 py-1 rounded-lg bg-space-void/60 border border-space-border overflow-x-auto">
@@ -93,9 +93,9 @@ export function PageNav({
                   key={page.id}
                   type="button"
                   onClick={() => onSelectPage(page.id)}
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-mono font-semibold transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-semibold transition-all whitespace-nowrap ${
                     isActive
-                      ? 'bg-accent-cyan/20 text-accent-cyan border border-accent-cyan/40 shadow-sm'
+                      ? 'bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/40 shadow-sm'
                       : 'text-cockpit-muted hover:bg-space-elevated hover:text-cockpit-primary'
                   }`}
                   title={page.hint}
@@ -110,7 +110,7 @@ export function PageNav({
 
           <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-space-void/60 border border-space-border">
             <span className="text-[9px] font-mono uppercase tracking-wider text-cockpit-muted">
-              {isMarsMode ? 'DEEP SPACE' : 'EARTH DUAL-USE'}
+              {isMarsMode ? 'SPACEFLIGHT' : 'REMOTE CLINIC'}
             </span>
           </div>
         </div>
@@ -127,7 +127,7 @@ export function PageNav({
         <div
           className={`h-9 w-9 rounded-lg flex items-center justify-center border transition-colors ${
             activeEmergencyCount > 0
-              ? 'bg-status-critical/20 border-status-critical text-status-critical animate-pulse'
+              ? 'bg-status-critical/10 border-status-critical text-status-critical'
               : 'bg-accent-cyan/10 border-accent-cyan/40 text-accent-cyan'
           }`}
         >
@@ -173,7 +173,7 @@ export function PageNav({
           type="button"
           className="w-full py-2 rounded-lg border text-xs font-mono flex items-center justify-between gap-2 px-2 transition-colors hover:bg-space-elevated"
         >
-          <span>{isMarsMode ? 'DEEP SPACE' : 'EARTH DUAL-USE'}</span>
+          <span>{isMarsMode ? 'SPACEFLIGHT' : 'REMOTE CLINIC'}</span>
         </button>
       </div>
     </aside>
