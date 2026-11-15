@@ -2,7 +2,6 @@ import {
   pipeline,
   env,
   type TextGenerationPipeline,
-  // @ts-expect-error - @huggingface/transformers lacks bundled types
 } from '@huggingface/transformers';
 import type { LlmWorkerRequest, LlmWorkerResponse } from '../types/aiSurgeon';
 
